@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ims/Documents/comTutor/CmakeDemo/test1/src/fun.c
+fun.h
+/home/ims/Documents/comTutor/CmakeDemo/test1/src/fun.h
+
+/home/ims/Documents/comTutor/CmakeDemo/test1/src/main.c
+stdio.h
+-
+fun.h
+/home/ims/Documents/comTutor/CmakeDemo/test1/src/fun.h
+
+include/fun.h
+math.h
+-
+

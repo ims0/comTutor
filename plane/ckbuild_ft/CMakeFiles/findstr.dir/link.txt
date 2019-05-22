@@ -1,0 +1,1 @@
+/usr/lib64/ccache/c++    -rdynamic CMakeFiles/findstr.dir/src_fun/TestCase.cpp.o CMakeFiles/findstr.dir/src_fun/plane.cpp.o  -o findstr -lgtest_main -lgtest -lpthread 

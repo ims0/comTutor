@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/plane.dir/src_fun/TestCase.cpp.o CMakeFiles/plane.dir/src_fun/plane.cpp.o  -o plane -lgtest_main -lgtest -lpthread 

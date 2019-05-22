@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package tutorial;
+import "google/protobuf/wrappers.proto";
+
+message PhoneNumType
+{
+    enum PhoneType
+    {
+        MOBILE = 0;
+        HOME = 1;
+        WORK = 2;
+    }
+}
+
+message PersonList {
+    int32 id = 1;
+    string name = 2;
+    bytes  email = 3;
+    bytes  ip=4;
+    //bytes 类型，用字符数组赋值的时候必须指定长度。
+    repeated PhoneNumber phonenum= 5;
+
+    message PhoneNumber
+    {
+        string number = 1;
+        PhoneNumType.PhoneType num_type = 2 ;
+    }
+
+}
+
+message PersonBook
+{
+    repeated PersonList person_list= 1;
+}
+//
+message Book
+{
+    int64     int64num = 1;
+    google.protobuf.UInt64Value uint64num=2;
+}
+

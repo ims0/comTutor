@@ -1,0 +1,5 @@
+*.out
+pbfile/*.cc
+pbfile/*.h
+output/*
+tags

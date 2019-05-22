@@ -1,0 +1,1 @@
+/usr/lib64/ccache/c++    -rdynamic CMakeFiles/findstr.dir/src/findstr.cpp.o CMakeFiles/findstr.dir/src/main.cpp.o  -o findstr 

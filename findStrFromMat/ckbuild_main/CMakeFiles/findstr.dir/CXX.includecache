@@ -1,0 +1,24 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/root/picture/comTutor/findStrFromMat/include/findstr.h
+iostream
+-
+string
+-
+vector
+-
+
+/root/picture/comTutor/findStrFromMat/src/findstr.cpp
+../include/findstr.h
+/root/picture/comTutor/findStrFromMat/include/findstr.h
+
+/root/picture/comTutor/findStrFromMat/src/main.cpp
+../include/findstr.h
+/root/picture/comTutor/findStrFromMat/include/findstr.h
+
