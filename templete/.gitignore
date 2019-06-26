@@ -1,0 +1,5 @@
+./code/project/build/*
+code/project/output/*					   
+*.o
+
+
