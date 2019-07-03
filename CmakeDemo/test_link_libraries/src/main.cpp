@@ -3,7 +3,8 @@
     > Author: ims
     > Created Time: 2019年07月01日 星期一 23时33分09秒
  ************************************************************************/
-
+#include "test.h"
+#include "inc.h"
 #include<iostream>
 using namespace std;
 extern int  printFun();
