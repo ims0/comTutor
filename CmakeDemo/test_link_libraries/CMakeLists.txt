@@ -5,6 +5,7 @@ add_definitions("-Wall  -g")
 set( root_dir "./")
 set( inc_dir  "${root_dir}include")
 set( test_dir  "${inc_dir}/include")
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 message(hello var root_dir: ${root_dir})
 AUX_SOURCE_DIRECTORY(src dir_srcs)
