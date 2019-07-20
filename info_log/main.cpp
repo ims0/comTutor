@@ -11,6 +11,7 @@ int main()
     
     UNIT_LOG(red, "hello %d",1);
     UNIT_LOG(green, "hello",1);
+    info_log("info_log:%d",10);
 
 }
 

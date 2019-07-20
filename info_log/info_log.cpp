@@ -16,7 +16,7 @@ int getColor(int color)
 {
     return levels[color];
 }
-void UnitLog(const char*funcName, int lineNum, int color, const char*format,...)
+void UnitLog(const char*fileName,const char*funcName, int lineNum, int color, const char*format,...)
 {
     if( nullptr !=format)
     {
@@ -25,7 +25,7 @@ void UnitLog(const char*funcName, int lineNum, int color, const char*format,...)
         va_start(argList,format);
         vsnprintf(logBuff,MAX_LOG_INFO_LEN,format,argList);
         va_end(argList);
-        printf("\e[%d;1m[%s@%d] %s \e[0m \n",getColor(color),funcName,lineNum,logBuff);
+        printf("\e[%d;1m[%s:%s@%d] %s \e[0m \n",getColor(color),fileName,funcName,lineNum,logBuff);
 
     }
 }

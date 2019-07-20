@@ -1,24 +1,22 @@
-#1.cmake verson，指定cmake版本
 cmake_minimum_required(VERSION 3.0)
 
-#2.project name，指定项目的名称，一般和项目的文件夹名称对应
-PROJECT(templete)
+project(calcWage)
+#debug info
+message(CMAKE_CURRENT_SOURCE_DIR:$(CMAKE_CURRENT_SOURCE_DIR))
+#add compile args
+add_definitions("-g")
+#add macro
+add_definitions(-DENABLED)
 
-add_definitions("-w -lpthread -g")
-
-#head file path
-INCLUDE_DIRECTORIES(
-include
-)
+include_directories(../app/include)
 
 #source directory
-AUX_SOURCE_DIRECTORY( ./ DIR_SRCS)
+#aux_sourcr_directory(<dir> <variable>)
+aux_source_directory(../app/src DIR_SRCS)
 
 #set environment variable
-SET(TEST_MATH  
-${DIR_SRCS}
-)
+set(TEST_MATH  ${DIR_SRCS})
 
 #add executable file
-ADD_EXECUTABLE(${PROJECT_NAME} ${TEST_MATH})
+add_executable(${PROJECT_NAME} ${DIR_SRCS})
 

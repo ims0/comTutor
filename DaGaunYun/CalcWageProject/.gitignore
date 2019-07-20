@@ -1,4 +1,4 @@
-./code/project/build/*
+code/project/build
 code/project/output/*					   
 *.o
 
