@@ -24,6 +24,8 @@ SET(LIBRARIES
 libm.so
 )
 
+message(DIR_SRCS:$(DIR_SRCS))
+message(TEST_MATH:$(TEST_MATH))
 #add executable file
 ADD_EXECUTABLE(${PROJECT_NAME} ${TEST_MATH})
 

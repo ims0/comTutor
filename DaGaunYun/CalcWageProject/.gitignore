@@ -1,5 +1,5 @@
 code/project/build
-code/project/output/*					   
+code/project/output                       
 *.o
 
 

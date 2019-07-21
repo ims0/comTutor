@@ -1,1 +1,0 @@
-/usr/lib64/ccache/cc   -rdynamic CMakeFiles/test_math.dir/src/fun.c.o CMakeFiles/test_math.dir/src/main.c.o  -o test_math -lm 

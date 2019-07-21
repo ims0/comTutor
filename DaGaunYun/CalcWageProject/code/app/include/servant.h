@@ -1,27 +1,22 @@
-/*************************************************************************
-    > File Name: servant.h
-    > Author: ims
-    > Created Time: 2019年07月15日 星期一 23时05分13秒
- ************************************************************************/
 
 #ifndef SERVANT_H
 #define SERVANT_H
 
 class Servant{
-Public:
+public:
     int CalcServantWage(int quarter)
     {
         int quarterWage = 0;
         int monthStart = (quarter-1)*3 +1;
         for(int monthLoop = monthStart; monthLoop < monthStart+3 ; ++monthLoop)
         {
-            quarterWage += getInstMoney()+getRewardMoney();
+            quarterWage += getInstMoney(quarter, monthLoop)+getRewardMoney(quarter, monthLoop);
         }
         return quarterWage;
     }
     virtual int getInstMoney(int quarter, int month)const = 0;
     virtual int getRewardMoney(int quarter, int month)const = 0;
-    virtual ~Servant(){ }
+    virtual ~Servant(){}
 };
 
 class QingWen:public Servant
