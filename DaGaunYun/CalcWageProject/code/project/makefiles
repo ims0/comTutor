@@ -1,9 +1,0 @@
-cc = gcc
-CXX = g++
-obj = main.o
-prom = output/exe
-CXXFLAGS += -W -g
-$(prom): $(obj)
-	$(CXX) $^ -o $@
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $<	

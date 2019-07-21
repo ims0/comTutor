@@ -4,19 +4,21 @@
 #include<cstring>
 
 using std::map;
+using std::shared_ptr;
+using std::make_shared;
 
-map<string,Servant*>servantMap;
-map<string,Host*>hostMap;
+map<string,shared_ptr<Servant>>servantMap;
+map<string,shared_ptr<Host>>hostMap;
 
 void InitMap()
 {
-    servantMap["晴雯"] = new QingWen;
-    servantMap["麝月"] = new SheYue;
-    servantMap["袭人"] = new XiRen;
-
-    hostMap["宝玉"] = new BaoYu;
-    hostMap["贾母"] = new JiaMu;
-    hostMap["贾政"] = new JiaZheng;
+    servantMap["晴雯"] = make_shared<QingWen>();
+    servantMap["麝月"] = make_shared<SheYue>();
+    servantMap["袭人"] = make_shared<XiRen>();
+    
+    hostMap["宝玉"] = make_shared<BaoYu>();
+    hostMap["贾母"] = make_shared<JiaMu>();
+    hostMap["贾政"] = make_shared<JiaZheng>();
 }
 // generation one`
 int CalcWage(string servantName, string quarterStr)
