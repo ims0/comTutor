@@ -14,4 +14,8 @@ fi
 cd build
 cmake ..
 make
-../output/calcWage
+../output/calcWage "袭人" 1
+
+../output/calcWage "袭人" 1 "贾母"
+../output/calcWage "袭人" 1 {"贾母","宝玉","贾政"}
+../output/calcWage "袭人" 1 {"贾母","宝玉","贾政"} {5,8,9} 
