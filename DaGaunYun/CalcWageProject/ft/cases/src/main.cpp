@@ -4,12 +4,11 @@
     > Created Time: 2019年07月23日 星期二 23时51分47秒
  ************************************************************************/
 
-#include<iostream>
-#include<gest/gest.h>
-using namespace std;
+#include<gtest/gtest.h>
 
-int main()
+int main(int argc, char **argv)
 {
-    
-    return 0;
+    testing::GTEST_FLAG(break_on_failure) = 0;
+    testing::InitGoogleTest(&argc, argv) ;
+    return RUN_ALl_TESTS();
 }
