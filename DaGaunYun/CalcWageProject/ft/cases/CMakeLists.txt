@@ -16,6 +16,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -Wall -Wfatal-errors -fpr
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../output")
 include_directories(
     ${app_dir}/include
     ${curr_dir}/include

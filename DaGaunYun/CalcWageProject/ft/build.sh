@@ -1,4 +1,3 @@
-cd cases
 if test -d build
 then
     rm -rf build/*
@@ -13,5 +12,6 @@ else
 fi
 
 cd build
-cmake ..
+cmake ../cases
 make
+../output/ft

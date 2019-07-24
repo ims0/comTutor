@@ -87,6 +87,8 @@ get_python_inc(),
 
 '-isystem',
 './CalcWageProject/code/app/include',
+'-isystem',
+'./CalcWageProject/ft/cases/include',
 ]
 
 # Clang automatically sets the '-std=' flag to 'c++14' for MSVC 2015 or later,
