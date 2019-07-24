@@ -10,5 +10,5 @@ int main(int argc, char **argv)
 {
     testing::GTEST_FLAG(break_on_failure) = 0;
     testing::InitGoogleTest(&argc, argv) ;
-    return RUN_ALl_TESTS();
+    return RUN_ALL_TESTS();
 }
