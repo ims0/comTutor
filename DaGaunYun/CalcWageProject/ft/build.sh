@@ -15,6 +15,6 @@ cd build
 cmake ../cases
 make
 ../output/ft
-lcov -d app -b . --no-external -c -o ReportCoverage.info
-
-genhtml -o CoverageReport   ReportCoverage.info
+lcov --directory . --capture -o cov_tem.info
+lcov --extract cov_tem.info  *src* -o cov_test.info
+genhtml --branch-coverage cov_test.info -o ../coverage_res

@@ -74,6 +74,7 @@ int CalcWage(string servantName, string quarterStr,
     }
     return wage;
 }
+// generation four
 int CalcWage(string servantName, string quarterStr,
         const vector<string>&hostName ,const vector<string>&score)
 {
