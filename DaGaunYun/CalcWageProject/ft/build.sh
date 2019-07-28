@@ -15,3 +15,6 @@ cd build
 cmake ../cases
 make
 ../output/ft
+lcov -d app -b . --no-external -c -o ReportCoverage.info
+
+genhtml -o CoverageReport   ReportCoverage.info

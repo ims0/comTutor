@@ -8,10 +8,17 @@ set(ft_name ft)
 
 project($(ft_name))
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11  -Wall -Wfatal-errors -ggdb -fprofile-arcs -ftest-coverage")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -g3 -Wall -Wfatal-errors -ggdb -fprofile-arcs -ftest-coverage")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -g3 -Wall -Wfatal-errors -ggdb -fprofile-arcs -ftest-coverage")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11  -Wall -Wfatal-errors -ggdb ")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -g3 -Wall -Wfatal-errors -ggdb ")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -g3 -Wall -Wfatal-errors -ggdb ")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -Wall -Wfatal-errors -fprofile-arcs -ftest-coverage")
+set(ENABLE_COVERAGE TRUE)
+
+if(ENABLE_COVERAGE)
+    message(STATUS "Use gcov for code coverage test")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
@@ -28,14 +35,14 @@ file(GLOB_RECURSE files
 
 add_subdirectory(${app_dir} ${app_name})
 
-IF(TOOLS)
+if(TOOLS)
     message(STATUS "Lib from defined tools in cmake.")
     include_directories(
         ${ tools_dir}/3rd/test/include)
     link_directories("${tools_dir}/3rd/test/lib")
-ELSE()
+else()
     message(STATUS "Lib from install tools in cmake.")
-ENDIF()
+endif()
 
 add_executable(${ft_name} ${files})
 target_link_libraries(${ft_name} ${app_name} gtest pthread )

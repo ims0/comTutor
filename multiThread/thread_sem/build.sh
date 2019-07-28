@@ -4,13 +4,14 @@
 # Created Time: 2019年07月27日 星期六 22时22分29秒
 #########################################################################
 #!/bin/bash
-
 if test -d build
 then
     rm -rf build/*
 else
     mkdir build
 fi
+
+
 if test -d output
 then
     rm -rf output/*
@@ -23,11 +24,19 @@ then
 else
     mkdir coverage
 fi
-cd coverage
-gcc -fprofile-arcs -ftest-coverage ../sem_thread.c -o ../output/sem_thread -lpthread
+
+cd build
+
+gcc ../sem_thread.c -fprofile-arcs -ftest-coverage -o ../output/sem_thread -lpthread
 
 ../output/sem_thread
-gcov ../sem_thread.c
-lcov -d . -o 'sem_test.info' -b . -c
 
-genhtml --branch-coverage  -o result sem_test.info
+#create sem_thread.c.gcov  dont use it when use lcov
+#gcov -b sem_thread.c
+#create html result
+#-d: .gcno .gcda 所在的文件夹，注意这里有个“.”，是从当前文件夹中获取数据
+#(that's where the counter files ending with .da will be stored)
+#-c: lcov 的一个操作，表示要去捕获覆盖率数据
+#-o: 输出文件
+lcov -d .  -c -o 'sem_test.info'
+genhtml --branch-coverage sem_test.info -o ../coverage
