@@ -30,16 +30,16 @@ int main (int argc, char** argv)
 
     thiz = (PrivInfo* )malloc (sizeof (PrivInfo));
     RETURN_1_IF_NULL(thiz)
-    info_init(thiz, 3);
+    info_init(thiz, 300);
 
     ret = pthread_create(&pt_1, NULL, (void*)pthread_func_1, thiz);
     if (ret != 0)
     {
         perror ("pthread_1_create:");
     }
-	else{
+    else{
 
-	}
+    }
 
     ret = pthread_create(&pt_2, NULL, (void*)pthread_func_2, thiz);
     if (ret != 0)
@@ -89,7 +89,7 @@ static void pthread_func_1 (PrivInfo* thiz)
     {
         sem_wait (&thiz->s2);
         printf ("pthread1: get sem.\n");
-        printf ("pthread1: data process.\n");
+        printf ("pthread1: data process.var:%d\n",thiz->var);
         thiz->var += 1;
         printf ("pthread1: post sem.\n");
         sem_post (&thiz->s1);
@@ -108,7 +108,7 @@ static void pthread_func_2 (PrivInfo* thiz)
     {
         sem_wait (&thiz->s1);
         printf ("pthread2: get sem.\n");
-        printf ("pthread2: data process.\n");
+        printf ("pthread2: data process.var:%d\n",thiz->var);
         thiz->var += 1;
         printf ("pthread2: post sem.\n");
         sem_post (&thiz->s2);

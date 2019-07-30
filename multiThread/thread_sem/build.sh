@@ -28,7 +28,7 @@ fi
 cp sem_thread.c build
 cd build
 
-gcc ../sem_thread.c -fprofile-arcs -ftest-coverage -o ../output/sem_thread -lpthread
+gcc ../sem_thread.c  -g -fprofile-arcs -ftest-coverage -o ../output/sem_thread -lpthread
 
 ../output/sem_thread
 #create sem_thread.c.gcov  dont use it when use lcov
@@ -38,5 +38,5 @@ gcc ../sem_thread.c -fprofile-arcs -ftest-coverage -o ../output/sem_thread -lpth
 #(that's where the counter files ending with .da will be stored)
 #-c: lcov 的一个操作，表示要去捕获覆盖率数据
 #-o: 输出文件
-lcov -d .  -c -o 'sem_test.info'  --no-external
+lcov -d .  -c -o 'sem_test.info'
 genhtml --branch-coverage sem_test.info -o ../coverage
