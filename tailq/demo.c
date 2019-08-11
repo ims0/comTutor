@@ -6,7 +6,7 @@
 
 #include<stdio.h>
 #include<stdlib.h>
-#include"/usr/include/x86_64-linux-gnu/sys/queue.h"
+#include"sys/queue.h"
 
 struct tail_elem 
 {
