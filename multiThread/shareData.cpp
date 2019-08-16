@@ -11,6 +11,7 @@ using namespace std;
 vector<int> shareData = {
     1, 2, 3
 };
+int gArr[10];
 void print(int i)
 {
     cout<<"thread start running!"<<endl;
@@ -29,13 +30,31 @@ void read()
     }
     cout<<" end!"<<endl;
 }
+
+void writearr(int k)
+{
+    for( int i =0; i < 5 ; ++i )
+    {
+        gArr[i] = i*k;
+    }
+    
+}
+void readarr()
+{
+    for( int i =0; i <5 ; ++i )
+    {
+        cout<<gArr[i] << " ";
+    }
+        cout<<" end "<< endl;
+}
+
 int main()
 {
     vector<thread> myth;
     for( int i=0 ; i<5 ; ++i )
     {
-        //myth.push_back(thread(write, i+10));
-        myth.push_back(thread(read));
+        myth.push_back(thread(writearr, i*2));
+        myth.push_back(thread(readarr));
     }
     for( auto iter=myth.begin() ; iter != myth.end(); ++iter )
     {
