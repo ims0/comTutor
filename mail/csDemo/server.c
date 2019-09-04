@@ -11,7 +11,6 @@
  
 int main()
 {    
-    const char *sendbuf= "this is a server return string ,thanks";
     char buf[256];
     int s_fd,c_fd;
     

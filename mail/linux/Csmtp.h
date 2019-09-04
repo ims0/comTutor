@@ -7,9 +7,14 @@
 #include<sys/types.h>  
 #include<sys/socket.h>  
 #include<netinet/in.h>
+#include<netdb.h>
 #pragma  comment(lib, "ws2_32.lib") /*链接ws2_32.lib动态链接库*/ 
 // POP3服务器（端口：110） Csmtp服务器（端口：25） 
 using namespace std;
+typedef  int SOCKET;
+typedef struct sockaddr_in SOCKADDR_IN;
+typedef struct hostent* HOSTENT;
+#define gethostname gethostbyname
 class Csmtp
 {
 
@@ -23,7 +28,7 @@ class Csmtp
 
 
     HOSTENT* pHostent;
-    int sockClient;  //客户端的套接字
+    SOCKET sockClient;  //客户端的套接字
     vector <string> filename;  //存储附件名的向量
 
 public:

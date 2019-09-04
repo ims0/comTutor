@@ -1,49 +1,8 @@
 #include "Csmtp.h"
 #include "string.h"
+#include<arpa/inet.h>
 //#include <afx.h>//异常类
-static const char base64Char[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-char* base64Encode(char const* origSigned, unsigned origLength)
-{
-    unsigned char const* orig = (unsigned char const*)origSigned; // in case any input bytes have the MSB set  
-    if (orig == NULL) return NULL;
-
-    unsigned const numOrig24BitValues = origLength / 3;
-    bool havePadding = origLength > numOrig24BitValues * 3;
-    bool havePadding2 = origLength == numOrig24BitValues * 3 + 2;
-    unsigned const numResultBytes = 4 * (numOrig24BitValues + havePadding);
-    char* result = new char[numResultBytes + 3]; // allow for trailing '/0'  
-
-    // Map each full group of 3 input bytes into 4 output base-64 characters:  
-    unsigned i;
-    for (i = 0; i < numOrig24BitValues; ++i)
-    {
-        result[4 * i + 0] = base64Char[(orig[3 * i] >> 2) & 0x3F];
-        result[4 * i + 1] = base64Char[(((orig[3 * i] & 0x3) << 4) | (orig[3 * i + 1] >> 4)) & 0x3F];
-        result[4 * i + 2] = base64Char[((orig[3 * i + 1] << 2) | (orig[3 * i + 2] >> 6)) & 0x3F];
-        result[4 * i + 3] = base64Char[orig[3 * i + 2] & 0x3F];
-    }
-
-    // Now, take padding into account.  (Note: i == numOrig24BitValues)  
-    if (havePadding)
-    {
-        result[4 * i + 0] = base64Char[(orig[3 * i] >> 2) & 0x3F];
-        if (havePadding2)
-        {
-            result[4 * i + 1] = base64Char[(((orig[3 * i] & 0x3) << 4) | (orig[3 * i + 1] >> 4)) & 0x3F];
-            result[4 * i + 2] = base64Char[(orig[3 * i + 1] << 2) & 0x3F];
-        }
-        else
-        {
-            result[4 * i + 1] = base64Char[((orig[3 * i] & 0x3) << 4) & 0x3F];
-            result[4 * i + 2] = '=';
-        }
-        result[4 * i + 3] = '=';
-    }
-
-    result[numResultBytes] = '\0';
-    return result;
-}
-
+extern char* base64Encode(char const* origSigned, unsigned origLength);
 int    socket_fd, connect_fd;  
 int Csmtp::SendAttachment(SOCKET &sockClient) /*发送附件*/
 {
@@ -97,15 +56,16 @@ int Csmtp::SendAttachment(SOCKET &sockClient) /*发送附件*/
 
 bool Csmtp::CReateSocket()
 {
-    WSADATA wsaData;
-    WORD wVersionRequested = MAKEWORD(2, 1);
+    //WSADATA wsaData;
+    //WORD wVersionRequested = MAKEWORD(2, 1);
     //WSAStarup，即WSA(Windows SocKNDs Asynchronous，Windows套接字异步)的启动命令
-    int err = WSAStartup(wVersionRequested, &wsaData);
+    //int err = WSAStartup(wVersionRequested, &wsaData);
+    int err  = 0;
     cout << "WSAStartup(0:successful):" << err << endl;
 
     char namebuf[128];    //获得本地计算机名
     string ip_list;
-    if (0 == gethostname(namebuf, 128))
+    if (0 == gethostname(namebuf))
     {
         struct hostent* pHost;  //获得本地IP地址
         pHost = gethostbyname(namebuf);  //pHost返回的是指向主机的列表
@@ -126,7 +86,7 @@ bool Csmtp::CReateSocket()
 
     sockClient = socket(AF_INET, SOCK_STREAM, 0); //建立socket对象  
 
-    pHostent = gethostbyname(domain.c_str()); //得到有关于域名的信息
+    //pHostent = gethostbyname(domain.c_str()); //得到有关于域名的信息
 
     if (pHostent == NULL)
     {
@@ -147,14 +107,16 @@ int Csmtp::SendMail()
     string message; //
 
     SOCKADDR_IN addrServer;  //服务端地址
-    addrServer.sin_addr.S_un.S_addr = *((DWORD *)pHostent->h_addr_list[0]); //得到smtp服务器的网络字节序的ip地址     
+    //addrServer.sin_addr.S_un.S_addr = *((DWORD *)pHostent->h_addr_list[0]); //得到smtp服务器的网络字节序的ip地址     
 
 
+    inet_pton(AF_INET,"127.0.0.1", &addrServer.sin_addr);
 
     addrServer.sin_family = AF_INET;
     addrServer.sin_port = htons(port); //连接端口25 
     //int connect (SOCKET s , const struct sockaddr FAR *name , int namelen );
-    err = connect(sockClient, (SOCKADDR*)&addrServer, sizeof(SOCKADDR));   //向服务器发送请求  
+    err = connect(sockClient, (struct sockaddr*)&addrServer, sizeof(SOCKADDR_IN));   //向服务器发送请求  
+
     cout << "connect:" << err << endl;
     //telnet smtp.126.com 25 连接服务器结束
     buff[recv(sockClient, buff, 500, 0)] = '\0';
