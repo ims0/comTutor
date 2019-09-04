@@ -1,0 +1,5 @@
+D:\Csharp\Dict\Console\bin\Release\Console.exe.config
+D:\Csharp\Dict\Console\bin\Release\Console.exe
+D:\Csharp\Dict\Console\bin\Release\Console.pdb
+D:\Csharp\Dict\Console\obj\Release\Console.exe
+D:\Csharp\Dict\Console\obj\Release\Console.pdb

@@ -1,0 +1,9 @@
+G:\C-sharp\Dict\WindowsForms\bin\Debug\WindowsForms.exe.config
+G:\C-sharp\Dict\WindowsForms\bin\Debug\WindowsForms.exe
+G:\C-sharp\Dict\WindowsForms\bin\Debug\WindowsForms.pdb
+G:\C-sharp\Dict\WindowsForms\obj\Debug\Dict_form.csprojResolveAssemblyReference.cache
+G:\C-sharp\Dict\WindowsForms\obj\Debug\WindowsForms.Form1.resources
+G:\C-sharp\Dict\WindowsForms\obj\Debug\WindowsForms.Properties.Resources.resources
+G:\C-sharp\Dict\WindowsForms\obj\Debug\Dict_form.csproj.GenerateResource.Cache
+G:\C-sharp\Dict\WindowsForms\obj\Debug\WindowsForms.exe
+G:\C-sharp\Dict\WindowsForms\obj\Debug\WindowsForms.pdb

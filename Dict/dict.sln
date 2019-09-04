@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dict_Console", "Console\Dict_Console.csproj", "{75D030FC-9BEE-46B7-84CE-B1ED35BDF567}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dict_form", "WindowsForms\Dict_form.csproj", "{73299E06-3F0A-4289-9B9B-19D4B61D0894}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{75D030FC-9BEE-46B7-84CE-B1ED35BDF567}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75D030FC-9BEE-46B7-84CE-B1ED35BDF567}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75D030FC-9BEE-46B7-84CE-B1ED35BDF567}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75D030FC-9BEE-46B7-84CE-B1ED35BDF567}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73299E06-3F0A-4289-9B9B-19D4B61D0894}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73299E06-3F0A-4289-9B9B-19D4B61D0894}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73299E06-3F0A-4289-9B9B-19D4B61D0894}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73299E06-3F0A-4289-9B9B-19D4B61D0894}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,15 @@
+G:\C#\Console\Console\bin\Debug\Console.exe.config
+G:\C#\Console\Console\bin\Debug\Console.exe
+G:\C#\Console\Console\bin\Debug\Console.pdb
+G:\C#\Console\Console\obj\Debug\Console.csprojResolveAssemblyReference.cache
+G:\C#\Console\Console\obj\Debug\Console.exe
+G:\C#\Console\Console\obj\Debug\Console.pdb
+G:\C-sharp\Console\Console\bin\Debug\Console.exe.config
+G:\C-sharp\Console\Console\bin\Debug\Console.exe
+G:\C-sharp\Console\Console\bin\Debug\Console.pdb
+G:\C-sharp\Console\Console\obj\Debug\Console.csprojResolveAssemblyReference.cache
+G:\C-sharp\Console\Console\obj\Debug\Console.exe
+G:\C-sharp\Console\Console\obj\Debug\Console.pdb
+G:\C-sharp\Dict\Console\bin\Debug\Console.exe.config
+G:\C-sharp\Dict\Console\obj\Debug\Console.exe
+G:\C-sharp\Dict\Console\obj\Debug\Console.pdb

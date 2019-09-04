@@ -1,0 +1,17 @@
+G:\C-sharp\Dict\WindowsForms\bin\Release\WindowsForms.exe.config
+G:\C-sharp\Dict\WindowsForms\bin\Release\WindowsForms.exe
+G:\C-sharp\Dict\WindowsForms\bin\Release\WindowsForms.pdb
+G:\C-sharp\Dict\WindowsForms\obj\Release\WindowsForms.Form1.resources
+G:\C-sharp\Dict\WindowsForms\obj\Release\WindowsForms.Properties.Resources.resources
+G:\C-sharp\Dict\WindowsForms\obj\Release\Dict_form.csproj.GenerateResource.Cache
+G:\C-sharp\Dict\WindowsForms\obj\Release\WindowsForms.exe
+G:\C-sharp\Dict\WindowsForms\obj\Release\WindowsForms.pdb
+D:\Csharp\Dict\WindowsForms\bin\Release\WindowsForms.exe.config
+D:\Csharp\Dict\WindowsForms\obj\Release\WindowsForms.exe
+D:\Csharp\Dict\WindowsForms\obj\Release\WindowsForms.pdb
+D:\Csharp\Dict\WindowsForms\bin\Release\WindowsForms.exe
+D:\Csharp\Dict\WindowsForms\bin\Release\WindowsForms.pdb
+D:\Csharp\Dict\WindowsForms\obj\Release\Dict_form.csprojResolveAssemblyReference.cache
+D:\Csharp\Dict\WindowsForms\obj\Release\WindowsForms.Form1.resources
+D:\Csharp\Dict\WindowsForms\obj\Release\WindowsForms.Properties.Resources.resources
+D:\Csharp\Dict\WindowsForms\obj\Release\Dict_form.csproj.GenerateResource.Cache
