@@ -53,7 +53,15 @@ int Csmtp::SendAttachment(SOCKET &sockClient) /*发送附件*/
     return 0;
 }
 
-
+#if 0
+      struct hostent {
+               char  *h_name;            /* official name of host */
+               char **h_aliases;         /* alias list */
+               int    h_addrtype;        /* host address type */
+               int    h_length;          /* length of address */
+               char **h_addr_list;       /* list of addresses */
+           }
+#endif
 bool Csmtp::CReateSocket()
 {
     //WSADATA wsaData;
@@ -65,6 +73,15 @@ bool Csmtp::CReateSocket()
 
     char namebuf[128];    //获得本地计算机名
     string ip_list;
+     struct hostent * hosTent = gethostent();
+     cout<<hosTent->h_name<<endl;
+     cout<<*hosTent->h_aliases<<endl;
+     for( int i=0 ; i<hosTent->h_length ; ++i )
+     {
+       printf("IP Address : %s\n",inet_ntoa(*((struct in_addr *)hosTent->h_addr +i)));
+     }
+     
+
     if (0 == gethostname(namebuf))
     {
         struct hostent* pHost;  //获得本地IP地址
