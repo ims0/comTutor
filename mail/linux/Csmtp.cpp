@@ -74,6 +74,12 @@ bool Csmtp::CReateSocket()
     char namebuf[128];    //获得本地计算机名
     string ip_list;
      struct hostent * hosTent = gethostent();
+     if (hosTent  == NULL)
+    {
+        printf("创建连接失败，也许没联网！\n");
+        return false;
+    }
+
      cout<<hosTent->h_name<<endl;
      cout<<*hosTent->h_aliases<<endl;
      for( int i=0 ; i<hosTent->h_length ; ++i )
@@ -82,35 +88,14 @@ bool Csmtp::CReateSocket()
      }
      
 
-    if (0 == gethostname(namebuf))
-    {
-        struct hostent* pHost;  //获得本地IP地址
-        pHost = gethostbyname(namebuf);  //pHost返回的是指向主机的列表
-        for (int i = 0; pHost != NULL&&pHost->h_addr_list[i] != NULL; i++)
-        {
-            string tem = inet_ntoa(*(struct in_addr *)pHost->h_addr_list[i]);
-            ip_list += tem;
-            ip_list += "\n";
-        }
-    }
-    else
-    {
-        cout << "获取主机信息失败..." << endl;
-    }
     //////////////////////////////////////////////////////////////////////////
     title = namebuf;// 邮件标题
     content = ip_list; //主机ip
 
     sockClient = socket(AF_INET, SOCK_STREAM, 0); //建立socket对象  
 
-    //pHostent = gethostbyname(domain.c_str()); //得到有关于域名的信息
 
-    if (pHostent == NULL)
-    {
-        printf("创建连接失败，也许没联网！\n");
-        return false;
-    }
-
+    cout << "successful" << err << endl;
     return true;
 }
 

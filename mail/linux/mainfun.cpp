@@ -11,11 +11,18 @@ int main()
         "xxx.com" //目标邮箱
         );
 
+        cout << " succ!" << endl;
     if (!mail.CReateSocket())
     {
         cout << "ReateSocket failed!" << endl;
         return -1;//
     }
+    else{
+
+        cout << "ReateSocket succ!" << endl;
+    }
+
+        cout << " succ!" << endl;
     //标题默认是主机名，内容默认是ip
     mail.setTitle("test mail");
     mail.setContent("this is content.");
