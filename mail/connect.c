@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
  
 #define SOCKET_ERROR -1
 #define PRINT(x) printf("%s\n",(x))
@@ -33,6 +34,13 @@ struct hostent {
 
 #endif
 // 根据域名获取ip  
+void printHost(struct hostent * host)
+{
+    printf("host.h_name:%s\n", host->h_name);
+    printf("host.h_length:%d \n", host->h_length);
+    printf("host.h_addr_list:%s \n", host->h_addr_list[0]);
+    printf("host.h_addr_list:%s \n", host->h_addr_list[1]);
+}
 int get_ip_by_domain(const char *domain, char *ip)  
 {  
     char **pptr;  
@@ -41,10 +49,10 @@ int get_ip_by_domain(const char *domain, char *ip)
     hptr = gethostbyname(domain);  
     if(NULL == hptr)  
     {  
-        printf("gethostbyname error for host:%s/n", domain);  
+        printf("gethostbyname error for host:%s \n", domain);  
         return -1;  
     }  
-  
+      printHost(hptr);
     for(pptr = hptr->h_addr_list ; *pptr != NULL; pptr++)  
     {  
         if (NULL != inet_ntop(hptr->h_addrtype, *pptr, ip, IP_SIZE) )  
@@ -55,37 +63,28 @@ int get_ip_by_domain(const char *domain, char *ip)
   
     return -1;  
 }
-void printHost(struct hostent * host)
-{
-    printf("host.h_name:%s\n", host->h_name);
-    printf("host.h_length:%d \n", host->h_length);
-    printf("host.h_addr_list:%s \n", host->h_addr_list[0]);
-    printf("host.h_addr_list:%s \n", host->h_addr_list[1]);
-}
+
 int connectHost(const char *smtpaddr)
 {
-    struct sockaddr_in servaddr;
+    struct sockaddr_in serveAddr;
+    bzero(&serveAddr,sizeof(serveAddr));
+    serveAddr.sin_family = AF_INET;
+    serveAddr.sin_port = htons(25);
+    char serveIp[IP_SIZE];
+    get_ip_by_domain("smtp.126.com" ,serveIp);
+    printf("126_ip:%s\n",serveIp);
+    if(inet_pton(AF_INET, serveIp, &serveAddr.sin_addr) <= 0 ) 
+    {
+        printf("inet_pton error!\n");
+        return -1;
+    };
     sockfd = socket(AF_INET,SOCK_STREAM,0);
     if(sockfd < 0)
     {
         printf("Create socket error!\n");
         return -1;
     }
-    bzero(&servaddr,sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(25);
-    char serveIp[IP_SIZE];
-    get_ip_by_domain("smtp.126.com" ,serveIp);
-    printf("126_ip:%s\n",serveIp);
-    struct hostent * host = gethostbyname("smtp.126.com");
-    printHost(host);
-    if(inet_pton(AF_INET, serveIp, &servaddr.sin_addr) <= 0 ) 
-    {
-        printf("inet_pton error!\n");
-        return -1;
-    };
-
-    if (connect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr)) < 0)    
+    if (connect(sockfd,(struct sockaddr *)&serveAddr,sizeof(serveAddr)) < 0)    
     {
         printf("Connect failed... \n");
         return -1;

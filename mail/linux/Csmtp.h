@@ -11,10 +11,8 @@
 #pragma  comment(lib, "ws2_32.lib") /*链接ws2_32.lib动态链接库*/ 
 // POP3服务器（端口：110） Csmtp服务器（端口：25） 
 using namespace std;
-typedef  int SOCKET;
-typedef struct sockaddr_in SOCKADDR_IN;
-typedef struct hostent* HOSTENT;
-#define gethostname gethostbyname
+
+
 class Csmtp
 {
 
@@ -27,8 +25,8 @@ class Csmtp
     string content;  //邮件内容
 
 
-    HOSTENT* pHostent;
-    SOCKET sockClient;  //客户端的套接字
+    hostent* pHostent;
+    int sockfd;  //客户端的套接字
     vector <string> filename;  //存储附件名的向量
 
 public:
@@ -40,7 +38,7 @@ public:
         string _pass,       //密码
         string _target)     //目标邮箱
         :port(_port), domain(_domain), user(_user), pass(_pass), target(_target){};//内容 
-    bool CReateSocket();
+    bool connectServer();
     void setTitle(string tem){ title = tem; }
     void setContent(string tem){ content = tem; }
 
