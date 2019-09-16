@@ -1,7 +1,5 @@
 #include "test_case.h"
 
-int CalcWage(string servantName,string quarter);
-
 TEST_F(TestCase, hostNameErr)
 {
     vector<string>hostName{"宝玉","贾母","error"};
