@@ -5,15 +5,15 @@
 using namespace std;
 
 
-class FooEnvironment : public testing::Environment{
+class globalEnvironment : public testing::Environment{
 public:
     virtual void SetUp()
     {
-        std::cout << "Foo FooEnvironment SetUP" << std::endl;
+        std::cout << "======= global Environment SetUP ========" << std::endl;
     }
     virtual void TearDown()
     {
-        std::cout << "Foo FooEnvironment TearDown" << std::endl;
+        std::cout << "======= global Environment TearDown =========" << std::endl;
     }
 };
 
@@ -23,12 +23,12 @@ class TestCase:public testing::Test
 public:
     static void SetUpTestCase()
     {
-        cout<<"SetUpTestCase()"<<endl;
+        cout<<"------ static SetUpTestCase() -------"<<endl;
     }
  
     static void TearDownTestCase()
     {
-        cout<<"TearDownTestCase()"<<endl;
+        cout<<"------- static TearDownTestCase() --------"<<endl;
     }
     void SetUp()
     {
