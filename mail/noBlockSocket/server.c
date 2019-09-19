@@ -21,15 +21,21 @@ int rcvThreadCanRun= 1;
  *  @param[out] 无
  *  @return 成功返回0；失败返回-1
  */
+
+typedef struct{
+    int client_fd[30];
+    int cur_num;
+}ClientList;
+ClientList gClientList;
 void printWait()
 {
     static int cnt=0;
     switch (cnt++)
     {
-        case 0:printf("\b\\");break; 
-        case 1:printf("\b|");break; 
-        case 2:printf("\b/");break; 
-        case 3:printf("\b—");break; 
+        case 0:printf("\b\\");break;
+        case 1:printf("\b|");break;
+        case 2:printf("\b/");break;
+        case 3:printf("\b—");break;
     }
     fflush(stdout);
     if(cnt == 4)
@@ -77,6 +83,10 @@ int AcceptConnection()
     {
         struct sockaddr_in c_addr;
         int addrlen=sizeof(struct sockaddr_in);
+        /*int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+         *On success, these system calls return a nonnegative integer 
+         *that is a file descriptor for the accepted socket.  
+         *On error, -1 is returned, and errno is set appropriately. */
         c_fd = accept(s_fd, (struct sockaddr*)&c_addr, (socklen_t*__restrict)&addrlen);
         if (c_fd == -1)
         {
@@ -87,15 +97,24 @@ int AcceptConnection()
             }
             else
             {
-                perror("未知错误，接受客户端连接线程退出。" );
-                return -1;
+                perror(__func__);
+                continue;
             }
         }
         else//收到客户端请求。
         {
             puts("\nhave already connected.");
-            const char *hello= "have establish connection.";
+            const char *hello= "have establish connection with server.";
+            /*On success, these calls return the number of bytes sent.
+             * On error, -1 is returned, and errno is set appropriately.*/
             int ret = send(c_fd,hello, strlen(hello), 0);
+            if( ret > 0 )
+            {
+                puts("have send hello msg to client");
+            }
+            else{
+                perror("send");
+            }
             break;
         }
     }
@@ -145,13 +164,11 @@ int main()
 
     bind(s_fd,(struct sockaddr*)&s_addr, addrlen);
 
+    /*int listen(int sockfd, int backlog);
+     * The backlog argument defines the maximum length to 
+     * which the queue of pending connections for sockfd may grow.  */
     listen(s_fd,30);
-    /*
-       On  success,  these  system  calls  return  a  nonnegative integer that is a descriptor for the accepted socket.  On error, -1 is
-       returned, and errno is set appropriately.
-       */
-    if(AcceptConnection() == -1)
-        return -1;
+    AcceptConnection();
     pthread_t subTid;
     if(0 !=pthread_create(&subTid, NULL, recvThread, NULL))
     {
