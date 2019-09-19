@@ -13,7 +13,7 @@
 #define PORT 3339
 int s_fd = 0;
 int c_fd = 0;
-int rcvThreadCanRun= 0;
+int rcvThreadCanRun= 1;
 /** @fn    set_nonblock(int32 sock_fd, bool b_set)
  *  @brief    设置socket fd为阻塞模式或者非阻塞模式
  *  @param[in]  sock_fd 已经连接成功的连接fd。范围:大于0
@@ -96,7 +96,6 @@ int AcceptConnection()
             puts("\nhave already connected.");
             const char *hello= "have establish connection.";
             int ret = send(c_fd,hello, strlen(hello), 0);
-            rcvThreadCanRun = 1;
             break;
         }
     }
@@ -109,23 +108,21 @@ void *recvThread(void *arg)//接收数据线程入口函数。
     char recvBuff[bufLen];
     while (rcvThreadCanRun)
     {
-        printWait();
+        //printWait();
         memset(recvBuff, 0, bufLen);
         int ret = recv(c_fd, recvBuff, bufLen, 0);
         usleep(500);
-        printf("ret:%d", ret );
         if (ret == 0)//客户端关闭套接字，则返回0，否则-1.
         {
-            perror("client is disconnection! ");
             rcvThreadCanRun = 0;
-            return NULL;
+            perror("client is disconnection! ");
         }
         else if (ret>0)
         {
             printf("\nrecv:%s\n ",  recvBuff );
         }
     }
-    perror("recvThread normal exit.");
+    puts("recvThread normal exit.");
     return NULL;
 }
 
@@ -171,7 +168,7 @@ int main()
             rcvThreadCanRun = 0;
             puts("wait thread for exit！");
             pthread_join(subTid,NULL);
-            return 0;
+            break;
         }
         if(send(c_fd, sendBuff, strlen(sendBuff)+1,0) == -1)
         {
@@ -179,6 +176,7 @@ int main()
             break;
         }
     }
+    puts("main exit！");
 
     close(s_fd);
     close(c_fd);
