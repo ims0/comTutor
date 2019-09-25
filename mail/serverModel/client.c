@@ -116,13 +116,13 @@ void *recvThread(void *arg)//接收数据线程入口函数。
         usleep(1000);
         if (ret == 0)//客户端关闭套接字，则返回0，否则-1.
         {
-            perror("Server is disconnection! ");
+            perror("Server is disconnection,input any to exit! ");
             rcvThreadCanRun = 0;
             return NULL;
         }
         else if (ret>0)
         {
-            printf("\nrecv:%s\n ",  recvBuff );
+            printf("\n%s\n ",  recvBuff );
         }
     }
     puts("recvThread normal exit.");
@@ -138,15 +138,14 @@ int main(int argc , char*argv[])
         return -2;
     }
     char sendBuff[256];
-    while (1)
+    while (rcvThreadCanRun)
     {
         scanf("%s",sendBuff);
-        if (!strcmp(sendBuff, "q")||rcvThreadCanRun == 0)
+        if (!strcmp(sendBuff, "q"))
         {
             rcvThreadCanRun = 0;
             puts("wait thread for exit！");
             pthread_join(subTid,NULL);
-            return 0;
         }
         if(send(clientSocket, sendBuff, strlen(sendBuff)+1,0) == -1)
         {

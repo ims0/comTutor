@@ -15,8 +15,8 @@
 #define MAX_LINE 100
 #define PORT 3339
 int s_fd = 0;
+#define  rcvBufLen  200
 //int c_fd = 0;
-int rcvThreadCanRun= 1;
 sem_t gMainMsgSem;
 /** @fn    set_nonblock(int32 sock_fd, bool b_set)
  *  @brief    设置socket fd为阻塞模式或者非阻塞模式
@@ -26,16 +26,22 @@ sem_t gMainMsgSem;
  *  @return 成功返回0；失败返回-1
  */
 
-typedef struct{
-    pthread_t thread_id[30];        /* ID returned by pthread_create() */
-    int client_fd[30];
-    int cur_num;
-}ClientList;
-
-ClientList gClientList;
+struct ClientInfo{
+    pthread_t threadId;        /* ID returned by pthread_create() */
+    int clientFd;
+    char ip[20];
+    TAILQ_ENTRY(ClientInfo) field;
+};
+typedef struct ClientInfo ClientInfo;
+TAILQ_HEAD(ClientHeader,ClientInfo);
+struct Client{
+    struct ClientHeader clientHead;
+    int num;
+}gClientList;
 
 typedef struct{
     int client_fd;
+    char ip[20];
 }rcvThreadArg;
 
 
@@ -43,14 +49,22 @@ typedef struct{
 struct Msg{
     size_t msgLen;
     int clientFd;
-    char  msgData[100];
+    char ip[20];
+    char  msgData[rcvBufLen];
     TAILQ_ENTRY(Msg) field;
 };
 
 TAILQ_HEAD(MsgHead,Msg);
 
-struct MsgHead gMsgHeader;
+struct MsgHead gMsgQueue;
 
+
+void dataInit()
+{
+    TAILQ_INIT(&gMsgQueue);
+    TAILQ_INIT(&gClientList.clientHead);
+    gClientList.num=0;
+}
 void printWait()
 {
     static int cnt=0;
@@ -103,33 +117,41 @@ int setNonblock(int sock_fd, int b_set)
 
 void *recvThread(void *arg)//接收数据线程入口函数。
 {
-    puts("recvThread start." );
     rcvThreadArg *thArg = (rcvThreadArg *)arg;
-    const int bufLen = 200;
-    char recvBuff[bufLen];
     printf("thread have send hello msg to client fd:%d \n", thArg->client_fd);
-    while (rcvThreadCanRun)
+    while (1)
     {
-        memset(recvBuff, 0, bufLen);
-        int ret = recv(thArg->client_fd, recvBuff, bufLen, 0);
+        struct Msg * msg =(struct Msg *) malloc(sizeof(struct Msg));
+        int ret = recv(thArg->client_fd, msg->msgData, rcvBufLen, 0);
         usleep(5000);
         if (ret == 0)//客户端关闭套接字，则返回0，否则-1.
         {
-            rcvThreadCanRun = 0;
             perror("client is disconnection! ");
+            break;
         }
         else if (ret>0)
         {
-            sem_post(&gMainMsgSem);
-            struct Msg * msg =(struct Msg *) malloc(sizeof(struct Msg));
-            memcpy(msg->msgData, recvBuff, 100);
             msg->clientFd = thArg->client_fd;
+            strncpy(msg->ip, thArg->ip,20);
             //TAILQ_INSERT_TAIL(head, elm, field)
-            TAILQ_INSERT_TAIL(&gMsgHeader,msg,field);
-            printf("\nrecv:%s\n ",  recvBuff );
+            TAILQ_INSERT_TAIL(&gMsgQueue,msg,field);
+            printf("\nrecv:%s\n",  msg->msgData);
+            sem_post(&gMainMsgSem);
         }
     }
-    gClientList.cur_num--;
+    ClientInfo *client=NULL;
+    TAILQ_FOREACH(client, &gClientList.clientHead, field)
+    {
+        if(client->clientFd == thArg->client_fd)
+        {
+            TAILQ_REMOVE(&gClientList.clientHead, client, field);
+            gClientList.num--;
+            break;
+        }
+    }
+    close(thArg->client_fd);
+    free(arg);
+    free(client);
     puts("recvThread normal exit.");
     return NULL;
 }
@@ -138,13 +160,13 @@ void* AcceptConnection(void*arg)
     printf("wait for connection   ");
     while (1)
     {
-        struct sockaddr_in c_addr;
+        struct sockaddr_in client_addr;
         int addrlen=sizeof(struct sockaddr_in);
         /*int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
          *On success, these system calls return a nonnegative integer 
          *that is a file descriptor for the accepted socket.  
          *On error, -1 is returned, and errno is set appropriately. */
-        int c_fd = accept(s_fd, (struct sockaddr*)&c_addr, (socklen_t*__restrict)&addrlen);
+        int c_fd = accept(s_fd, (struct sockaddr*)&client_addr, (socklen_t*__restrict)&addrlen);
         if (c_fd == -1)
         {
             if (errno == EWOULDBLOCK)
@@ -160,6 +182,8 @@ void* AcceptConnection(void*arg)
         else//收到客户端请求。
         {
             puts("\nhave already connected.");
+            printf("ip=%s\n",inet_ntoa(client_addr.sin_addr));
+            printf("port=%d\n",ntohs(client_addr.sin_port));
             const char *hello= "have establish connection with server.";
             /*On success, these calls return the number of bytes sent.
              * On error, -1 is returned, and errno is set appropriately.*/
@@ -167,15 +191,20 @@ void* AcceptConnection(void*arg)
             if( ret > 0 )
             {
                 printf("have send hello msg to client fd:%d \n", c_fd);
-                static rcvThreadArg thArg={0};
-                thArg.client_fd = c_fd;
-                if(0 !=pthread_create(&gClientList.thread_id[gClientList.cur_num], NULL, recvThread, &thArg))
+                rcvThreadArg *thArg= (rcvThreadArg *)malloc(sizeof(rcvThreadArg));
+                thArg->client_fd = c_fd;
+                strncpy(thArg->ip, inet_ntoa(client_addr.sin_addr), 20);
+                ClientInfo*client = (ClientInfo*)malloc(sizeof(ClientInfo));
+                if(0 !=pthread_create(&client->threadId, NULL, recvThread, thArg))
                 {
                     perror("pthread_create failed:");
                     return NULL;
                 }
                 else{
-                    gClientList.client_fd[gClientList.cur_num++] = c_fd;
+                    client->clientFd = c_fd;
+                    strncpy(client->ip, inet_ntoa(client_addr.sin_addr), 20);
+                    TAILQ_INSERT_TAIL(&gClientList.clientHead,client,field);
+                    gClientList.num++;
                 }
             }
             else{
@@ -190,7 +219,7 @@ void* AcceptConnection(void*arg)
 
 int main()
 {
-    TAILQ_INIT(&gMsgHeader);
+    dataInit();
     sem_init(&gMainMsgSem, 0, 0);
     struct sockaddr_in s_addr;
 
@@ -216,27 +245,36 @@ int main()
         return -2;
     }
 
+    char temMsg[200];
     while (1)
     {
         sem_wait(&gMainMsgSem);
-        puts("get sem");
-        struct Msg *var = TAILQ_FIRST(&gMsgHeader);
+        struct Msg *msg = TAILQ_FIRST(&gMsgQueue);
+        printf("current thNum:%d ,msg from fd:%d, ip:%s, msg:%s\n",gClientList.num, msg->clientFd,msg->ip, msg->msgData);
+        ClientInfo *client=NULL;
+        TAILQ_FOREACH(client, &gClientList.clientHead, field)
         {
-            printf("current thNum:%d ,msg from fd:%d ,msg:%s\n",gClientList.cur_num, var->clientFd,var->msgData);
-        }
-        for( int i = 0 ; i<gClientList.cur_num ; ++i )
-        {
-            if(send(gClientList.client_fd[i], var->msgData, strlen(var->msgData)+1,0) == -1)
+            if(client->clientFd != msg->clientFd)
             {
-                perror("send failed！");
-                break;
+                memset(temMsg, 0, sizeof(temMsg));
+                strcpy(temMsg,msg->ip);
+                if(send(client->clientFd, strcat(strcat(temMsg, ":"),msg->msgData),strlen(msg->msgData)+ strlen(temMsg)+1,0) == -1)
+                {
+                    perror("send failed！");
+                    break;
+                }
             }
-            printf("send msg to fd:%d\n", gClientList.client_fd[i]);
-            fflush(stdout);
-
+            else{
+                if(send(client->clientFd, "have send.", strlen("have send."),0) == -1)
+                {
+                    perror("send failed！");
+                    break;
+                }
+            }
+            printf("send msg to fd:%d\n", client->clientFd);
         }
-
-        TAILQ_REMOVE(&gMsgHeader, var, field);
+        TAILQ_REMOVE(&gMsgQueue, msg, field);
+        free(msg);
     }
     puts("main exit！");
 
