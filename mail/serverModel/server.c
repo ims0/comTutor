@@ -14,17 +14,13 @@
 #include<stdlib.h>
 #define MAX_LINE 100
 #define PORT 3339
-int s_fd = 0;
 #define  rcvBufLen  200
-//int c_fd = 0;
+
+int s_fd = 0;
 sem_t gMainMsgSem;
-/** @fn    set_nonblock(int32 sock_fd, bool b_set)
- *  @brief    设置socket fd为阻塞模式或者非阻塞模式
- *  @param[in]  sock_fd 已经连接成功的连接fd。范围:大于0
- *  @param[in]  b_set 是否设置为非阻塞模式。0-否，非0-是；
- *  @param[out] 无
- *  @return 成功返回0；失败返回-1
- */
+pthread_mutex_t gMsgQueueMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t gClientListMutex = PTHREAD_MUTEX_INITIALIZER;
+
 
 struct ClientInfo{
     pthread_t threadId;        /* ID returned by pthread_create() */
@@ -79,6 +75,13 @@ void printWait()
     if(cnt == 4)
         cnt=0;
 }
+/** @fn    set_nonblock(int32 sock_fd, bool b_set)
+ *  @brief    设置socket fd为阻塞模式或者非阻塞模式
+ *  @param[in]  sock_fd 已经连接成功的连接fd。范围:大于0
+ *  @param[in]  b_set 是否设置为非阻塞模式。0-否，非0-是；
+ *  @param[out] 无
+ *  @return 成功返回0；失败返回-1
+ */
 int setNonblock(int sock_fd, int b_set)
 {
     printf("field s_fd:%d \n", sock_fd);
@@ -134,9 +137,11 @@ void *recvThread(void *arg)//接收数据线程入口函数。
             msg->clientFd = thArg->client_fd;
             strncpy(msg->ip, thArg->ip,20);
             //TAILQ_INSERT_TAIL(head, elm, field)
+            pthread_mutex_lock(&gMsgQueueMutex);
             TAILQ_INSERT_TAIL(&gMsgQueue,msg,field);
-            printf("\nrecv:%s\n",  msg->msgData);
+            pthread_mutex_unlock(&gMsgQueueMutex);
             sem_post(&gMainMsgSem);
+            printf("\nrecv:%s\n",  msg->msgData);
         }
     }
     ClientInfo *client=NULL;
@@ -144,8 +149,10 @@ void *recvThread(void *arg)//接收数据线程入口函数。
     {
         if(client->clientFd == thArg->client_fd)
         {
+            pthread_mutex_lock(&gClientListMutex);
             TAILQ_REMOVE(&gClientList.clientHead, client, field);
             gClientList.num--;
+            pthread_mutex_unlock(&gClientListMutex);
             break;
         }
     }
@@ -203,8 +210,11 @@ void* AcceptConnection(void*arg)
                 else{
                     client->clientFd = c_fd;
                     strncpy(client->ip, inet_ntoa(client_addr.sin_addr), 20);
+
+                    pthread_mutex_lock(&gClientListMutex);
                     TAILQ_INSERT_TAIL(&gClientList.clientHead,client,field);
                     gClientList.num++;
+                    pthread_mutex_unlock(&gClientListMutex);
                 }
             }
             else{
@@ -263,6 +273,9 @@ int main()
                     perror("send failed！");
                     break;
                 }
+                else{
+                    printf("send msg to fd:%d\n", client->clientFd);
+                }
             }
             else{
                 if(send(client->clientFd, "have send.", strlen("have send."),0) == -1)
@@ -271,9 +284,10 @@ int main()
                     break;
                 }
             }
-            printf("send msg to fd:%d\n", client->clientFd);
         }
+        pthread_mutex_lock(&gMsgQueueMutex);
         TAILQ_REMOVE(&gMsgQueue, msg, field);
+        pthread_mutex_unlock(&gMsgQueueMutex);
         free(msg);
     }
     puts("main exit！");
