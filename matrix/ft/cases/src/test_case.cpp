@@ -1,33 +1,18 @@
 #include "test_case.h"
+#include "matrix.h"
 
-TEST_F(TestCase, hostNameErr)
+TEST_F(TestCase, adjoint_test)
 {
-    vector<string>hostName{"宝玉","贾母","error"};
-    int wage = CalcWage("晴雯","4",hostName);
-    ASSERT_EQ(wage, 1);
-}
-TEST_F(TestCase, ServantNameErr)
-{
-    vector<string>hostName{"宝玉","贾母","贾政"};
-    int wage = CalcWage("晴雯err","4",hostName);
-    ASSERT_EQ(wage, 1);
+    Matrix mat(4);
+    mat<<0.53,0.43,0.61,0.97,
+        0.69,0.31,0.49,0.87,
+        0.26,0.93,0.34,0.06,
+        0.98,0.80,0.65,0.58;
+    cout<<mat;
+    Matrix tem(mat.inverse());
+    cout<<tem;
+
+
+    ASSERT_EQ(1, 1);
 }
 
-TEST_F(TestCase, Test_four)
-{
-    vector<string>hostName{"宝玉","贾母","贾政"};
-    int wage = CalcWage("晴雯","4",hostName);
-    ASSERT_EQ(wage, 23600);
-}
-TEST_F(TestCase, SheYue_test)
-{
-    vector<string>hostName{"宝玉","贾母","贾政"};
-    int wage = CalcWage("麝月","4",hostName);
-    ASSERT_EQ(wage, 21200);
-}
-TEST_F(TestCase, XiRen_test)
-{
-    vector<string>hostName{"宝玉","贾母","贾政"};
-    int wage = CalcWage("袭人","4",hostName);
-    ASSERT_EQ(wage, 58000);
-}

@@ -1,7 +1,7 @@
-
+#ifndef TEST_CASE_H
+#define TEST_CASE_H
 #include<gtest/gtest.h>
 #include<iostream>
-#include<enterFun.h>
 using namespace std;
 
 
@@ -42,3 +42,4 @@ public:
 
 };
 
+#endif
