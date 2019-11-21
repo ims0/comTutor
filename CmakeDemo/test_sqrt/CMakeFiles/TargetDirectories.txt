@@ -1,3 +1,0 @@
-/home/ims/Documents/comTutor/CmakeDemo/test1/CMakeFiles/rebuild_cache.dir
-/home/ims/Documents/comTutor/CmakeDemo/test1/CMakeFiles/test_math.dir
-/home/ims/Documents/comTutor/CmakeDemo/test1/CMakeFiles/edit_cache.dir
