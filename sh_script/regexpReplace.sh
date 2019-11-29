@@ -11,12 +11,20 @@ fi
 
 #var define
 path=$1
+<<<<<<< Updated upstream
 whiteSpaceReg='\s+$'
 tabFlag='tab'
 
 #func define
  grep -P '\s+$' -rl testdir/
 Replace()
+=======
+whiteSpaceReg='\s\+$'
+tabFlag='tab'
+
+#func define
+function Replace()
+>>>>>>> Stashed changes
 {
     from=$1; to=$2
     echo "--Scanning file which contain $from"
