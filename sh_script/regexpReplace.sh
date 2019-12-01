@@ -12,29 +12,53 @@ fi
 #var define
 path=$1
 
-whiteSpaceReg='\s\+$'
-tabFlag='tab'
-
 #func define
-function Replace()
+showGreen()
 {
+  echo -e "\e[1;32m$1\e[0m"
+}
+showRed()
+{
+  echo -e "\e[1;31m$1\e[0m"
+}
+Grep()
+{
+    if [ $# -lt 1 ];then
+        return 
+    else
+        GrepRes=(`grep -P $1 -rl $path --include=*.{cpp,c,h}`)
+    fi
+}
+Replace()
+{
+    if [ $# -lt 1 ];then return;fi
     from=$1; to=$2
     echo "--Scanning file which contain $from"
-    grep -P $from -rl $path --include=*.{cpp,c,h}
+    Grep $from
+    if [ ${#GrepRes[*]} -eq 0 ];then
+        showRed "--no match any file"
+        return
+    fi
+    echo --match fileList:
+    echo ${GrepRes[*]}
 
     echo "--start processing: [$from] be replace [$to]"
-    if [ $# -lt 2 ];then
-        sed -i "s/$from//g" `grep -P $from -rl $path --include=*.{cpp,c,h}`
-    elif [ $to == $tabFlag ];then
-        sed -i "s/$from/    /g" `grep -P $from -rl $path --include=*.{cpp,c,h}`
+    if [ $from == '\t' ];then
+        sed -i -E "s/$from/    /g" ${GrepRes[*]}
     else
-        sed -i "s/$from/$to/g" `grep -P $from -rl $path --include=*.{cpp,c,h}`
+        sed -i -E "s/$from/$to/g" ${GrepRes[*]}
     fi
-    echo "--Check result"
-    grep -P $from -rl $path --include=*.{cpp,c,h}
+    # check
+    Grep $from
+    if [ ${#GrepRes[*]} -eq 0 ];then
+        showGreen "--Check result ok"
+    else
+        showRed "--those file:${GrepRes[@]} process failed!"
+    fi
     echo "--end"
 }
 
 #cmd
-echo "--path $path"
-Replace $whiteSpaceReg
+echo "--path:$path"
+Replace '\s+$'
+Replace '\t' 

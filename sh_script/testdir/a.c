@@ -9,6 +9,7 @@
 
 int main()
 {
-    
-    return 0;            
+
+                      :wq
+              :                      return 0;
 }
