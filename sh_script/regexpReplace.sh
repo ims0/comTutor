@@ -11,6 +11,7 @@ fi
 
 #var define
 path=$1
+binaryOperator="binaryOperator"
 
 #func define
 showGreen()
@@ -42,10 +43,15 @@ Replace()
     echo --match fileList:
     echo ${GrepRes[*]}
 
-    echo "--start processing: [$from] be replace [$to]"
     if [ $from == '\t' ];then
+        echo "--1start processing: [$from] be replace [    ]"
         sed -i -E "s/$from/    /g" ${GrepRes[*]}
+    elif [ $to == $binaryOperator ];then
+        echo "--2start binaryOperator processing: [$from] be replace [ $from ]"
+        sed -i -E "s/(\w+)\s*$from\s*(\w+)/\1 $from \2/g" ${GrepRes[*]}
+        return
     else
+        echo "--3start processing: [$from] be replace [$to]"
         sed -i -E "s/$from/$to/g" ${GrepRes[*]}
     fi
     # check
@@ -60,5 +66,15 @@ Replace()
 
 #cmd
 echo "--path:$path"
-Replace '\s+$'
+
 Replace '\t' 
+Replace '=' $binaryOperator
+Replace '>' $binaryOperator
+Replace '<' $binaryOperator
+Replace '<<' $binaryOperator
+Replace '>>' $binaryOperator
+Replace '==' $binaryOperator
+
+
+#
+Replace '\s+$'

@@ -9,7 +9,17 @@
 
 int main()
 {
-
+a=c
+ DDD===c
+    c==f
+    c>f
+    c<            f
+    c0 ==Af
+    c0 >>Af
+    c0 ==Af
+    c0 ==    Af
+    cd--==*
+    ============
                       :wq
               :                      return 0;
 }
