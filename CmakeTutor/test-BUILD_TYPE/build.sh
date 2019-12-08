@@ -19,7 +19,11 @@ RmOrMkdir output
 cd build
 echo "start cmake"
 pwd
-cmake ../ -DCMAKE_BUILD_TYPE=Release
+#shell 中指定编译器，有效
+export CC=/usr/bin/clang
+export CXX=/usr/bin/clang++
+#cmake -D是定义一个cmake使用的变量
+cmake ../ -DCMAKE_BUILD_TYPE=Release -DOUTPUT_DIR=output
 
 
 echo "start make"
