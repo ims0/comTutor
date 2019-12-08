@@ -8,12 +8,12 @@ set(ft_name ft)
 
 project($(ft_name))
 
-set(CMAKE_C_FLAGS           " -Wall -Wfatal-errors -std=c99 -g3  " )
-set(CMAKE_C_FLAGS_DEBUG     " -Wall -Wfatal-errors -g3        " )
-#set(CMAKE_C_FLAGS_RELEASE   " -Wall -Wfatal-errors         " )
-set(CMAKE_CXX_FLAGS         " -Wall -Wfatal-errors -std=c++11 -g3 " )
-set(CMAKE_CXX_FLAGS_DEBUG   " -Wall -Wfatal-errors -g3        " )
-#set(CMAKE_CXX_FLAGS_RELEASE " -Wall -Wfatal-errors         " )
+set(CMAKE_C_FLAGS            " -Wall -Wfatal-errors -std=c99 -g3   " )
+set(CMAKE_C_FLAGS_DEBUG      "                                     " )
+#set(CMAKE_C_FLAGS_RELEASE   "                                     " )
+set(CMAKE_CXX_FLAGS          " -Wall -Wfatal-errors -std=c++11 -g3 " )
+set(CMAKE_CXX_FLAGS_DEBUG    "                                     " )
+#set(CMAKE_CXX_FLAGS_RELEASE "                                     " )
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -Wall -Wfatal-errors ")
 
