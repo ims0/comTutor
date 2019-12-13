@@ -11,8 +11,8 @@ then
 else
     mkdir output
 fi
-export CC=/usr/local/bin/gcc
-export CXX=/usr/local/bin/g++
+#export CC=/usr/local/bin/gcc
+#export CXX=/usr/local/bin/g++
 echo shell:$CC
 echo shell:$CXX
 
