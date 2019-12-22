@@ -9,6 +9,7 @@
 
 #include<math.h>
  
+#define MACRO25  25
 double get_sqrt(double var1);
  
 #endif

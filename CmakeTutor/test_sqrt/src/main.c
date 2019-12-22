@@ -8,10 +8,11 @@
 
 
 #include<stdio.h>
+#include"test.h"
 #include"fun.h"
 int main()
 {
-    double b=25.0;
+    double b=MACRO25;
     double a=0.0;
     a=get_sqrt(b);
  

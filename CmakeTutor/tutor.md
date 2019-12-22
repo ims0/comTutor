@@ -29,3 +29,13 @@ set(CMAKE_CXX_FLAGS_RELEASE  " -O3                              " )
 ```
 
 project(app)
+
+
+## 查看include的默认搜索路径
+
+`gcc -xc -E -v -`
+## 不使用系统默认头文件
+    c 使用选项 -nostdinc 
+    C++  的是 -nostdin C++
+
+## 显示 .c 所有的头文件依赖: -M

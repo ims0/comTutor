@@ -7,11 +7,11 @@ set(CMAKE_C_COMPILER  "/usr/bin/gcc")
 set(CMAKE_CXX_COMPILER  "/usr/bin/g++")
 
 PROJECT(test_math)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}     -std=c99   -Wall -Wfatal-errors -O1 ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wfatal-errors -O1")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}     -std=c99   -Wall -Wfatal-errors ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wfatal-errors ")
 
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}     -std=c99   -Wall -Wfatal-errors -g3 ")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++11 -Wall -Wfatal-errors -g3 ")
+set(CMAKE_C_FLAGS_DEBUG " -g3 ")
+set(CMAKE_CXX_FLAGS_DEBUG " -g3 ")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/output")
 
@@ -24,8 +24,7 @@ message(CMAKE_BUILD_TYPE:    ${CMAKE_BUILD_TYPE})
 MESSAGE(STATUS $ENV{CC})
 MESSAGE(STATUS $ENV{CXX})
 MESSAGE(STATUS $ENV{HOME})
-add_definitions("-Wall -lpthread -g")
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 #head file path
 INCLUDE_DIRECTORIES(
 include
