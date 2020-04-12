@@ -18,10 +18,10 @@ jobs:
     - name: pwd
       run:  pwd
     - name: configure
-      run: ./configure
+      run: ./AutoTools/AutoconfDemo/configure
     - name: make
-      run: make
+      run: ./AutoTools/AutoconfDemo/make
     - name: make check
-      run: make check
+      run: ./AutoTools/AutoconfDemo/make check
     - name: make distcheck
-      run: make distcheck
+      run: ./AutoTools/AutoconfDemo/make distcheck
