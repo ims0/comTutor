@@ -13,15 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: entry project dir
-      run:  cd AutoTools/AutoconfDemo
-    - name: pwd
-      run:  pwd
     - name: configure
       run: ./AutoTools/AutoconfDemo/configure
     - name: make
-      run: ./AutoTools/AutoconfDemo/make
+      run: cd ./AutoTools/AutoconfDemo/;make
     - name: make check
-      run: ./AutoTools/AutoconfDemo/make check
+      run: cd ./AutoTools/AutoconfDemo/;make check
     - name: make distcheck
-      run: ./AutoTools/AutoconfDemo/make distcheck
+      run: cd ./AutoTools/AutoconfDemo/;make distcheck
