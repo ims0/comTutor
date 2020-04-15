@@ -10,21 +10,19 @@ typedef struct
     int len;
 }ThArgs;
 
-void*thFun(void* arg)
+void* thFun(void* arg)
 {
     pid_t pid= getpid();
     pthread_t tid= pthread_self();
     ThArgs *thArgs = (ThArgs*)arg;
     thArgs->len = 10;
     printf("thread:pid: %u, tid is: %lu\n",pid,tid);
+    pthread_detach(pthread_self());
     return NULL;
 }
 
 int main(void)
 {
-    pid_t mainPid= getpid();
-    pthread_t mainTid=pthread_self();
-
     ThArgs thArgs;
     memset(&thArgs,0,sizeof(thArgs));
 
@@ -32,6 +30,8 @@ int main(void)
  
     sleep(1);
 
+    pid_t mainPid= getpid();
+    pthread_t mainTid=pthread_self();
     printf("local var as args now value is: %d\n", thArgs.len);
     printf("main thread,pid: %u, tid: %lu\n", mainPid, mainTid);
     return res; 
