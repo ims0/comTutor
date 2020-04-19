@@ -1,7 +1,6 @@
-
 #include<stdio.h>
 #include<stdlib.h>
-#include"sys/queue.h"
+#include<sys/queue.h>
 
 struct tail_elem 
 {
