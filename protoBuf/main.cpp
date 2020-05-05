@@ -108,9 +108,9 @@ int main()
     }
     PersonBook pbPersonBook;
     demo_msg demo;
-    //demo.PrintDebugString(); 
+    demo.PrintDebugString(); 
     fillPB(cPerson, pbPersonBook, numOfPerson);
-    //pbPersonBook.PrintDebugString(); 
+    pbPersonBook.PrintDebugString(); 
     string transStr;
     bool flag = pbPersonBook.SerializeToString(&transStr);
     if(!flag)

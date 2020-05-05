@@ -17,7 +17,7 @@ if [ ! -d $outdir ];then
 elif [ ! -d "pbfile" ];then
     mkdir pbfile
 fi
-g++ -g pbfile/*.cc *.cpp -Ipbfile/ -I/usr/local/protobuf/include -L/usr/local/protobuf/lib -lpthread -lprotobuf  -o $outpath
+g++ -g pbfile/*.cc *.cpp -Ipbfile/ -I/usr/local/protobuf/include -L/usr/local/protobuf/lib  -lprotobuf -lpthread -o $outpath
 
 
 echo "Running~~~"
