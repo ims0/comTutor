@@ -8,8 +8,10 @@
 //
 #include<iostream>
 #include"person.pb.h"
+#include"test.pb.h"
 using namespace std;
 using namespace tutorial;
+using namespace test_proto;
 const int phoneNumArrSize=2;
 typedef enum CPhoneType
 {
@@ -18,20 +20,20 @@ typedef enum CPhoneType
     WORK,
 }CPhoneType;
 
-typedef struct PhoneNumber 
+typedef struct PhoneNumberInfo 
 {
     string number;
     CPhoneType type;
     
-}PhoneNumber;
+}PhoneNumberInfo;
 
 typedef struct CPerson
 {
     int id;
     string name;
     const char* p_email;
-    char ip[4];
-    PhoneNumber phoneNum[phoneNumArrSize];
+    const char* ip_address;
+    PhoneNumberInfo phoneNum[phoneNumArrSize];
 
 }CPerson;
 
@@ -44,28 +46,28 @@ int fillPB(CPerson cPerson[], PersonBook&pbBook, int numOfPerson)
         person->set_id(cPerson[cnt].id);
         person->set_name(cPerson[cnt].name);
         person->set_email(cPerson[cnt].p_email);
-        person->set_ip(cPerson[cnt].ip, 4);
+        //set_ip_address(const void* value, size_t size);
+        person->set_ip_address(cPerson[cnt].ip_address);
 
         for( int it=0 ; it<phoneNumArrSize ; it++ )
         {
-            PersonList::PhoneNumber &phone_number = *person->add_phonenum();
-            phone_number.set_number(cPerson[cnt].phoneNum[it].number);
+            PersonList::PhoneNumberInfo *phone_number = person->add_phone_num();
+            phone_number->set_number(cPerson[cnt].phoneNum[it].number);
             //C 语言类型为： PhoneNumType_PhoneType
-            phone_number.set_num_type((PhoneNumType_PhoneType)cPerson[cnt].phoneNum[it].type);//enum type
+            phone_number->set_num_type((PhoneNumType_PhoneType)cPerson[cnt].phoneNum[it].type);//enum type
         }
     }
-    pbBook.PrintDebugString(); 
     return 0;
 }
 
-int parsePbAndPrint(string &transStr)
+void parsePbAndPrint(string &transStr)
 {
     PersonBook addBook;
     bool flag = addBook.ParseFromString(transStr);
     if(!flag)
     {
         puts("\033[32m [ParseFromString] failed! \033[0m");
-        return 1;
+        return;
     }
 
     cout<<"Num of person in person_list:"<<addBook.person_list_size()<<endl;
@@ -76,12 +78,12 @@ int parsePbAndPrint(string &transStr)
         cout<<"people ID:"<<peopleInfo.id()<<endl;
         cout<<"people name:"<<peopleInfo.name()<<endl;
         cout<<"people email(bytes):"<<peopleInfo.email()<<",len:"<<peopleInfo.email().length()<<endl;
-        cout<<"people ip(bytes):"<<peopleInfo.ip().c_str()<<",ip_len:"<<peopleInfo.ip().length()<<endl;
-        cout<<"Size of phone_number:"<<peopleInfo.phonenum_size()<<endl;
+        cout<<"people ip_address(bytes):"<<peopleInfo.ip_address().c_str()<<",ip_address_len:"<<peopleInfo.ip_address().length()<<endl;
+        cout<<"Size of phone_number:"<<peopleInfo.phone_num_size()<<endl;
 
-        for( int i=0 ; i<peopleInfo.phonenum_size() ; i++ )
+        for( int i=0 ; i<peopleInfo.phone_num_size() ; i++ )
         {
-            const PersonList::PhoneNumber&numberItem = peopleInfo.phonenum(i);
+            const PersonList::PhoneNumberInfo&numberItem = peopleInfo.phone_num(i);
             cout<<"numberItem.number:"<<numberItem.number()<<endl;
             cout<<"numberItem.num_type:"<<numberItem.num_type()<<endl;
         }
@@ -97,10 +99,7 @@ int main()
         cPerson[cnt].id = cnt;
         cPerson[cnt].name = "ims";
         cPerson[cnt].p_email = "optimizes";
-        cPerson[cnt].ip[0]= 0x03;
-        cPerson[cnt].ip[1]= 0x02;
-        cPerson[cnt].ip[2]= 0x00;
-        cPerson[cnt].ip[3]= 0x00;
+        cPerson[cnt].ip_address= "1234";
         for( int i=0 ; i<phoneNumArrSize ; i++ )
         {
             cPerson[cnt].phoneNum[i].number = "123456";
@@ -108,7 +107,10 @@ int main()
         }
     }
     PersonBook pbPersonBook;
-    int ret = fillPB(cPerson, pbPersonBook, numOfPerson);
+    demo_msg demo;
+    //demo.PrintDebugString(); 
+    fillPB(cPerson, pbPersonBook, numOfPerson);
+    //pbPersonBook.PrintDebugString(); 
     string transStr;
     bool flag = pbPersonBook.SerializeToString(&transStr);
     if(!flag)
@@ -116,7 +118,7 @@ int main()
         puts("\033[32m [SerializeToString] failed! \033[0m");
         return 1;
     }
-    ret = parsePbAndPrint(transStr);
+    parsePbAndPrint(transStr);
 
     Book testBook;
     // int64 --> google.protobuf.UInt64Value

@@ -5,6 +5,7 @@
 #########################################################################
 #!/bin/bash
 protoc person.proto --cpp_out=pbfile
+protoc test.proto --cpp_out=pbfile
 
 echo "compiling~~~"
 
@@ -12,9 +13,9 @@ outfile="pbAddBook"
 outdir="output"
 outpath=$outdir/$outfile
 if [ ! -d $outdir ];then
-	mkdir $outdir 
+    mkdir $outdir 
 elif [ ! -d "pbfile" ];then
-	mkdir pbfile
+    mkdir pbfile
 fi
 g++ -g pbfile/*.cc *.cpp -Ipbfile/ -I/usr/local/protobuf/include -L/usr/local/protobuf/lib -lpthread -lprotobuf  -o $outpath
 

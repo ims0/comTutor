@@ -17,11 +17,11 @@ message PersonList {
     int32 id = 1;
     string name = 2;
     bytes  email = 3;
-    bytes  ip=4;
+    bytes  ip_address=4;
     //bytes 类型，用字符数组赋值的时候必须指定长度。
-    repeated PhoneNumber phonenum= 5;
+    repeated PhoneNumberInfo phone_num= 5;
 
-    message PhoneNumber
+    message PhoneNumberInfo
     {
         string number = 1;
         PhoneNumType.PhoneType num_type = 2 ;
