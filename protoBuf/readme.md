@@ -47,3 +47,15 @@ sudo ldconfig # refresh shared library cache.
 
 this option should loacl behind of `-lprotobuf`, like this `-lprotobuf -lpthread`
 otherwise, protobufObj.PrintDebugString() will cause coredump;
+
+
+2. can not find lib of protobuf ?
+
+result:
+`sudo vi /etc/ld.so.conf`
+
+add this line:`/usr/local/protobuf/lib` to ld.so.conf
+it mean add path of proto to ldconfig
+and then run command
+
+`sudo ldconfig`
