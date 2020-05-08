@@ -10,7 +10,8 @@
 #include <sys/epoll.h>
 
 using namespace std;
-
+const int maxEvents = 20;
+const int recvBuffLen = 1024;
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -34,117 +35,124 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    int iSockFd = socket(AF_INET, SOCK_STREAM, 0);
-    if (iSockFd < 0)
+    int serveSockFd = socket(AF_INET, SOCK_STREAM, 0);
+    if (serveSockFd < 0)
     {
         cerr << "fail to create socket, err: " << strerror(errno) << endl;
         return -1;
     }
-    cout << "create socket fd " << iSockFd << endl;
+    cout << "create socket fd " << serveSockFd << endl;
 
     sockaddr_in oAddr;
     memset(&oAddr, 0, sizeof(oAddr));
     oAddr.sin_family = AF_INET;
     oAddr.sin_addr.s_addr =htonl( INADDR_ANY);
     oAddr.sin_port = htons(usPort);
-    if (bind(iSockFd, (sockaddr *)&oAddr, sizeof(oAddr)) < 0)
+    if (bind(serveSockFd, (sockaddr *)&oAddr, sizeof(oAddr)) < 0)
     {
-        cerr << "fail to bind addr " << "" << ":" << usPort << ", err: " << strerror(errno) << endl;
+        cerr << "fail to bind addr " << ":" << usPort << ", err: " << strerror(errno) << endl;
         return -1;
     }
-    cout << "bind addr " <<"" << ":" << usPort << endl;
+    cout << "bind addr " << ":" << usPort << endl;
 
-    if (listen(iSockFd, 100) < 0)
+    if (listen(serveSockFd, 100) < 0)
     {
-        cerr << "fail to listen on " << "" << ":" << usPort << ", err: " << strerror(errno) << endl;
+        cerr << "fail to listen on " << ":" << usPort << ", err: " << strerror(errno) << endl;
     }
-    cout << "listen on socket fd " << iSockFd << endl;
-    
-    int iEpollFd = epoll_create(1024);
-    if (iEpollFd < 0)
+    cout << "listen on socket fd " << serveSockFd << endl;
+
+    int instanceOfEpoll = epoll_create(maxEvents);
+    if (instanceOfEpoll < 0)
     {
         cerr << "fail to create epoll, err: " << strerror(errno) << endl;
         return -1;
     }
 
-    epoll_event oEvent;
-    oEvent.events = EPOLLIN;
-    oEvent.data.fd = iSockFd;
-    if (epoll_ctl(iEpollFd, EPOLL_CTL_ADD, iSockFd, &oEvent) < 0)
+    epoll_event ctlEvent;
+    ctlEvent.events = EPOLLIN;// EPOLLIN, The associated file is available for read(2) operations.
+    ctlEvent.data.fd = serveSockFd;
+    if (epoll_ctl(instanceOfEpoll, EPOLL_CTL_ADD, serveSockFd, &ctlEvent) < 0)
     {
         cerr << "fail to add listen fd to epoll, err: " << strerror(errno) << endl;
         return -1;
     }
 
-    epoll_event aoEvents[1024];
-    uint8_t acRecvBuf[1024 * 1024];
+    epoll_event waitEvents[maxEvents];
+    uint8_t recvBuff[recvBuffLen];
     while (true)
     {
-        int iFdCnt = epoll_wait(iEpollFd, aoEvents, 1024, -1);
-        if (iFdCnt < 0)
+        /* int epoll_wait(int epfd, struct epoll_event *events,
+         *                       int maxEvents, int timeout);
+         * timeout=0, timeout equal  to  zero  cause epoll_wait() to return immediately
+         * timeout=-1, timeout of -1 causes epoll_wait() to block indefinitely */
+        int numOfReadyFd = epoll_wait(instanceOfEpoll, waitEvents, maxEvents, -1);
+        if (numOfReadyFd < 0)
         {
             cerr << "epoll wait error, err: " << strerror(errno) << endl;
             return -1;
         }
 
-        for (int i = 0; i < iFdCnt; i++)
+        for (int i = 0; i < numOfReadyFd; i++)
         {
-            if (aoEvents[i].data.fd == iSockFd)
+            if (waitEvents[i].data.fd == serveSockFd)
             {
-                sockaddr_in oClientAddr;
-                socklen_t iAddrLen = sizeof(oClientAddr);
-                int iAcceptFd = accept(iSockFd, (sockaddr *)&oClientAddr, &iAddrLen);
-                if (iAcceptFd < 0)
+                sockaddr_in clientSockAddr;
+                socklen_t iAddrLen = sizeof(clientSockAddr);
+                int acceptFd = accept(serveSockFd, (sockaddr *)&clientSockAddr, &iAddrLen);
+                if (acceptFd < 0)
                 {
                     cerr << "fail to accpet, err: " << strerror(errno) << endl;
                     continue;
                 }
-                cout << "recv connection from " << inet_ntoa(oClientAddr.sin_addr) << ":" << ntohs(oClientAddr.sin_port) << endl;
+                cout << "recv connection from " << inet_ntoa(clientSockAddr.sin_addr) << ":" << ntohs(clientSockAddr.sin_port) << endl;
 
-                oEvent.events = EPOLLIN;
-                oEvent.data.fd = iAcceptFd;
-                if (epoll_ctl(iEpollFd, EPOLL_CTL_ADD, iAcceptFd, &oEvent) < 0)
+                ctlEvent.events = EPOLLIN;
+                ctlEvent.data.fd = acceptFd;
+                if (epoll_ctl(instanceOfEpoll, EPOLL_CTL_ADD, acceptFd, &ctlEvent) < 0)
                 {
-                    close(iAcceptFd);
+                    close(acceptFd);
                     cerr << "fail to add fd to epoll, err: " << strerror(errno) << endl;
                     continue;
                 }
+                else
+                    cout<<"add accept fd:"<<acceptFd<< " to EPOLL_CTL"<<endl;
             }
             else
             {
-                int iCurFd = aoEvents[i].data.fd;
-                ssize_t iRecvLen = recv(iCurFd, acRecvBuf, sizeof(acRecvBuf), 0);
-                if (iRecvLen < 0)
+                int readyFd = waitEvents[i].data.fd;
+                bzero(recvBuff,recvBuffLen);
+                ssize_t recvDataLen = recv(readyFd, recvBuff, sizeof(recvBuff), MSG_DONTROUTE);
+                if (recvDataLen < 0)
                 {
                     cerr << "fail to recv, close connection, err: " << strerror(errno) << endl;
-                    if (epoll_ctl(iEpollFd, EPOLL_CTL_DEL, iCurFd, NULL) < 0)
+                    if (epoll_ctl(instanceOfEpoll, EPOLL_CTL_DEL, readyFd, NULL) < 0)
                     {
                         cerr << "fail to del fd from epoll, err: " << strerror(errno) << endl;
                     }
-                    close(iCurFd);
+                    close(readyFd);
                     continue;
                 }
-                if (iRecvLen == 0)
+                if (recvDataLen == 0)
                 {
                     cout << "connection closed by client" << endl;
-                    if (epoll_ctl(iEpollFd, EPOLL_CTL_DEL, iCurFd, NULL) < 0)
+                    if (epoll_ctl(instanceOfEpoll, EPOLL_CTL_DEL, readyFd, NULL) < 0)
                     {
                         cerr << "fail to del fd from epoll, err: " << strerror(errno) << endl;
                     }
-                    close(iCurFd);
+                    close(readyFd);
                     continue;
                 }
-                cout << "recv data len: " << iRecvLen << endl;
+                cout << "recv data:"<< recvBuff << endl;
 
-                ssize_t iSendLen = send(iCurFd, acRecvBuf, iRecvLen, 0);
+                ssize_t iSendLen = send(readyFd, recvBuff, recvDataLen, 0);
                 if (iSendLen < 0)
                 {
                     cerr << "fail to send, err: " << strerror(errno) << endl;
-                    if (epoll_ctl(iEpollFd, EPOLL_CTL_DEL, iCurFd, NULL) < 0)
+                    if (epoll_ctl(instanceOfEpoll, EPOLL_CTL_DEL, readyFd, NULL) < 0)
                     {
                         cerr << "fail to del fd from epoll, err: " << strerror(errno) << endl;
                     }
-                    close(iCurFd);
+                    close(readyFd);
                     break;
                 }
                 cout << "echo to client, len: " << iSendLen << endl;
