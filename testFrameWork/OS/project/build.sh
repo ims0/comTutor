@@ -18,4 +18,8 @@ make
 # run
 cd ../output
 pwd
-./fakeApp
+
+listenPort=3001
+netstat -np |grep $listenPort
+./fakeApp $listenPort
+
