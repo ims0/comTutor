@@ -15,10 +15,10 @@ int main(int argc, char *argv[])
 {
     if (argc != 2)
     {
-        cout << "usage: " << argv[0] << " ip port" << endl;
+        cout << "usage: " << argv[0] << " port" << endl;
         return -1;
     }
-/*
+    /*
     char *szIp = argv[1];
     in_addr_t iIp = inet_addr(szIp);
     if (iIp == INADDR_NONE)
