@@ -71,7 +71,7 @@ int InitSocket()
 
     /*inet_pton - convert IPv4 and IPv6 addresses from text to binary*/
     inet_pton(AF_INET,IP_ADDR, &addr.sin_addr);
-    addr.sin_port= PORT;
+    addr.sin_port= htons(PORT);
     /*int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
      *If the connection or binding succeeds, zero is returned.
      * On error, -1 is returned, and errno is set appropriately.*/

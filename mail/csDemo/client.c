@@ -6,21 +6,20 @@
 #include<arpa/inet.h>
 #include<netinet/in.h>
 #define MAX_LINE 100
-#define PORT 3339 
+#define PORT 3002
  
 int main(int argc , char*argv[])
 {
-    int    sockfd= socket(AF_INET, SOCK_STREAM,0);
+    int    socketFd= socket(AF_INET, SOCK_STREAM,0);
     
     struct sockaddr_in addr;
+    bzero(&addr,sizeof(addr));
     int len_addr=sizeof(addr);
- 
-    bzero(&addr,len_addr);
     addr.sin_family=AF_INET;
     inet_pton(AF_INET,"127.0.0.1", &addr.sin_addr);
 //    addr.sin_addr.s_addr= htonl(INADDR_ANY);
-    addr.sin_port= PORT;
-    int con= connect(sockfd, (struct sockaddr*)&addr, len_addr);
+    addr.sin_port= htons(PORT);
+    int con= connect(socketFd, (struct sockaddr*)&addr, len_addr);
  
     if(-1==con)
     {
@@ -31,16 +30,16 @@ int main(int argc , char*argv[])
         puts("connected!");
  
     char buf[256];
-    recv(sockfd, buf, 256,0);
+    recv(socketFd, buf, 256,0);
     printf("recv:%s\nsend:", buf );
  
     while(EOF!=scanf( "%s",buf))
     {    
-        send(sockfd,buf,strlen(buf)+1,0);
-        recv(sockfd, buf, 256,0);
+        send(socketFd,buf,strlen(buf)+1,0);
+        recv(socketFd, buf, 256,0);
         printf("recv:%s\nsend:", buf );
     }
-    close(sockfd);
+    close(socketFd);
     return 0;
  
 }

@@ -6,7 +6,7 @@
 #include<unistd.h>
 #include<arpa/inet.h>
 #define MAX_LINE 100
-#define PORT 3339 
+#define PORT 3002 
  
  
 int main()
@@ -22,7 +22,7 @@ int main()
     s_fd=socket(AF_INET, SOCK_STREAM,0);
     s_addr.sin_family =AF_INET;
     s_addr.sin_addr.s_addr=htonl( INADDR_ANY);
-    s_addr.sin_port= PORT;
+    s_addr.sin_port= htons(PORT);
  
     bind(s_fd,(struct sockaddr*)&s_addr, addrlen );
  

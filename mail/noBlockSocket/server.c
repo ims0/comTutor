@@ -160,7 +160,7 @@ int main()
 
     s_addr.sin_family =AF_INET;
     s_addr.sin_addr.s_addr=htonl( INADDR_ANY);
-    s_addr.sin_port= PORT;
+    s_addr.sin_port= htons(PORT);
 
     bind(s_fd,(struct sockaddr*)&s_addr, addrlen);
 

@@ -46,8 +46,14 @@ int main(int argc, char *argv[])
     sockaddr_in oAddr;
     memset(&oAddr, 0, sizeof(oAddr));
     oAddr.sin_family = AF_INET;
-    oAddr.sin_addr.s_addr =htonl( INADDR_ANY);
     oAddr.sin_port = htons(usPort);
+    //cout<<"htons"<<htons(usPort)<<endl;
+    oAddr.sin_addr.s_addr =htonl(INADDR_ANY);
+    if (inet_aton("127.0.0.1", &(oAddr.sin_addr)) != 1)
+    {
+        fprintf(stderr, "inet_aton error!!!\n");
+        exit(1);
+    }
     if (bind(serveSockFd, (sockaddr *)&oAddr, sizeof(oAddr)) < 0)
     {
         cerr << "fail to bind addr " << ":" << usPort << ", err: " << strerror(errno) << endl;

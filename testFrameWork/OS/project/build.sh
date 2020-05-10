@@ -10,9 +10,9 @@ then
 else
     mkdir output
 fi
-
+outFile="OS"
 cd build
-cmake ..
+cmake -DPROJECT_NAME=$outFile ..
 make
 
 # run
@@ -21,5 +21,5 @@ pwd
 
 listenPort=3001
 netstat -np |grep $listenPort
-./fakeApp $listenPort
+./$outFile $listenPort
 

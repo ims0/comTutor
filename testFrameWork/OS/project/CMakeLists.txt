@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(fakeApp)
+project(${PROJECT_NAME})
 message(CMAKE_CURRENT_SOURCE_DIR:${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/output")
 #add compile args
