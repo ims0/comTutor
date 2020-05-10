@@ -26,6 +26,7 @@ endif()
 
 
 set(code_path ${PROJECT_PATH}/../code)
+set(testcases_path ${PROJECT_PATH}/../testcases)
 message(STATUS ${code_path})
 include_directories(
     ${PROJECT_PATH}/../code/include
@@ -35,6 +36,7 @@ include_directories(
 file(GLOB_RECURSE files
     ${PROJECT_PATH}/../code/*.c*
     ${PROJECT_PATH}/../../infra/*.c*
+    ${testcases_path}/*.cpp
 )
 
 add_executable(${PROJECT_NAME} ${files})

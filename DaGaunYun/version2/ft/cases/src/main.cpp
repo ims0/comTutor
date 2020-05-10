@@ -6,7 +6,17 @@
 
 #include<gtest/gtest.h>
 #include<test_case.h>
-
+class globalEnvironment : public testing::Environment{
+public:
+    virtual void SetUp()
+    {
+        std::cout << "======= global Environment SetUP ========" << std::endl;
+    }
+    virtual void TearDown()
+    {
+        std::cout << "======= global Environment TearDown =========" << std::endl;
+    }
+};
 int main(int argc, char **argv)
 {
     testing::GTEST_FLAG(break_on_failure) = 0;

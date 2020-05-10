@@ -1,26 +1,15 @@
-
 #include<gtest/gtest.h>
 #include<iostream>
-#include<enterFun.h>
+
 using namespace std;
 
-
-class globalEnvironment : public testing::Environment{
-public:
-    virtual void SetUp()
-    {
-        std::cout << "======= global Environment SetUP ========" << std::endl;
-    }
-    virtual void TearDown()
-    {
-        std::cout << "======= global Environment TearDown =========" << std::endl;
-    }
-};
-
-
-class TestCase:public testing::Test
+class MsgTest:public testing::Test
 {
 public:
+    MsgTest()
+    {
+        cout<<"------ create -------"<<endl;
+    }
     static void SetUpTestCase()
     {
         cout<<"------ static SetUpTestCase() -------"<<endl;
@@ -42,3 +31,11 @@ public:
 
 };
 
+TEST_F(MsgTest, hostNameErr)
+{
+    ASSERT_EQ(1, 1);
+}
+TEST_F(MsgTest, hostNameErr1)
+{
+    ASSERT_EQ(1, 1);
+}
