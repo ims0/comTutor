@@ -27,4 +27,19 @@ int getSocketFd(int port, const char *ipAddress)
     printf("connect succ return fd:%d\n",socketFd);
     return socketFd;
 }
+typedef struct tagPSMsg
+{
+    WORD32 version;
+    WORD16 msgId;
+    WORD16 priority;
+    CHAR*sessionType;
+    CHAR*sessionInst;
+}PSMsg;
 
+int op_pub(PSMsg *psBrief, BYTE *data, WORD32 dataLen)
+{
+}
+WORD32 pno    = OSS_GetSelfPNO();
+int  op_sub(const CHAR* sessionType, const CHAR* sessionInst, WORD32  pno)
+{
+}
