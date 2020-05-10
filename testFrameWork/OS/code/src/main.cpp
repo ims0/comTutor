@@ -43,18 +43,20 @@ int main(int argc, char *argv[])
     }
     cout << "create socket fd " << serveSockFd << endl;
 
-    sockaddr_in oAddr;
-    memset(&oAddr, 0, sizeof(oAddr));
-    oAddr.sin_family = AF_INET;
-    oAddr.sin_port = htons(usPort);
-    //cout<<"htons"<<htons(usPort)<<endl;
-    oAddr.sin_addr.s_addr =htonl(INADDR_ANY);
-    if (inet_aton("127.0.0.1", &(oAddr.sin_addr)) != 1)
+    sockaddr_in serverAddrIn;
+    memset(&serverAddrIn, 0, sizeof(serverAddrIn));
+    serverAddrIn.sin_family = AF_INET;
+    /*uint32_t htonl(uint32_t hostlong);*/
+    serverAddrIn.sin_addr.s_addr =htonl(INADDR_ANY);
+    /*uint16_t htons(uint16_t hostshort);*/
+    serverAddrIn.sin_port = htons(usPort);
+    cout<<"htons"<<htons(usPort)<<endl;
+    if (inet_aton("127.0.0.1", &(serverAddrIn.sin_addr)) != 1)
     {
         fprintf(stderr, "inet_aton error!!!\n");
         exit(1);
     }
-    if (bind(serveSockFd, (sockaddr *)&oAddr, sizeof(oAddr)) < 0)
+    if (bind(serveSockFd, (sockaddr *)&serverAddrIn, sizeof(serverAddrIn)) < 0)
     {
         cerr << "fail to bind addr " << ":" << usPort << ", err: " << strerror(errno) << endl;
         return -1;
@@ -110,7 +112,7 @@ int main(int argc, char *argv[])
                     cerr << "fail to accpet, err: " << strerror(errno) << endl;
                     continue;
                 }
-                cout << "recv connection from " << inet_ntoa(clientSockAddr.sin_addr) << ":" << ntohs(clientSockAddr.sin_port) << endl;
+                cout << "\nrecv connection from " << inet_ntoa(clientSockAddr.sin_addr) << ":" << ntohs(clientSockAddr.sin_port) << endl;
 
                 ctlEvent.events = EPOLLIN;
                 ctlEvent.data.fd = acceptFd;

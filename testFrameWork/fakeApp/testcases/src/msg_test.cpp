@@ -40,9 +40,9 @@ public:
 int MsgTest::socketFd = 0;
 TEST_F(MsgTest, hostNameErr)
 {
-    puts("start");
     char buf[256];
-    const char *str="hello";
+    bzero(buf,sizeof(buf));
+    const char *str="first test!";
     send(MsgTest::socketFd, str, strlen(str), 0);
     recv(MsgTest::socketFd, buf, 256,0);
 
@@ -52,5 +52,12 @@ TEST_F(MsgTest, hostNameErr)
 
 TEST_F(MsgTest, hostNameErr1)
 {
-    ASSERT_EQ(1, 1);
+    char buf[256];
+    bzero(buf,sizeof(buf));
+    const char *str="scend test!";
+    send(MsgTest::socketFd, str, strlen(str), 0);
+    recv(MsgTest::socketFd, buf, 256,0);
+
+    printf("send:%s, recv:%s\n",str, buf);
+    ASSERT_EQ(strcmp(str,buf), 0);
 }
