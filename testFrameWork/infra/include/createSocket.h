@@ -5,7 +5,7 @@
 extern "C"{
 #endif
 
-int getSocketFd();
+int getSocketFd(int port, const char *ipAddr);
 
 #ifdef __cplusplus
 }

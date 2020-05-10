@@ -6,3 +6,5 @@ lows/project/build
 lows/project/output
 OS/project/build
 OS/project/output
+fakeApp/project/build_debug/
+fakeApp/project/ccache_tempfile/
