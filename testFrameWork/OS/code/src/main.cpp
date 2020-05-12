@@ -12,6 +12,22 @@
 using namespace std;
 const int maxEvents = 20;
 const int recvBuffLen = 1024;
+
+int deliverMsg(void *buff, int buffLen,int instanceOfEpoll, int readyFd)
+{
+    ssize_t iSendLen = send(readyFd, buff, buffLen, 0);
+    if (iSendLen < 0)
+    {
+        cerr << "fail to send, err: " << strerror(errno) << endl;
+        if (epoll_ctl(instanceOfEpoll, EPOLL_CTL_DEL, readyFd, NULL) < 0)
+        {
+            cerr << "fail to del fd from epoll, err: " << strerror(errno) << endl;
+        }
+        close(readyFd);
+    }
+    return iSendLen;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -152,17 +168,10 @@ int main(int argc, char *argv[])
                 }
                 cout << "recv data:"<< recvBuff << endl;
 
-                ssize_t iSendLen = send(readyFd, recvBuff, recvDataLen, 0);
-                if (iSendLen < 0)
-                {
-                    cerr << "fail to send, err: " << strerror(errno) << endl;
-                    if (epoll_ctl(instanceOfEpoll, EPOLL_CTL_DEL, readyFd, NULL) < 0)
-                    {
-                        cerr << "fail to del fd from epoll, err: " << strerror(errno) << endl;
-                    }
-                    close(readyFd);
+                ssize_t iSendLen = deliverMsg(recvBuff, recvDataLen, instanceOfEpoll, readyFd);
+                if(iSendLen < 0)
                     break;
-                }
+
                 cout << "echo to client, len: " << iSendLen << endl;
             }
         }
