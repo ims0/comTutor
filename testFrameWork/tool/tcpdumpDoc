@@ -921,4 +921,17 @@ BUGS
 
        Arithmetic expression against transport layer headers, like tcp[0], does not work against IPv6 packets.  It only looks at IPv4 packets.
 
-                                                                      2 February 2017                                                           TCPDUMP(8)
+             
+
+
+3.1 TCP Flags（tcp header第十四个字节）
+我们再仔细看下上面提到的flags概念，flags位于tcp header的第十四个字节，包含8个比特位，也就是上图的CWR到FIN。这8个比特位都有特定的功能用途，分别是：CWR，ECE，URG，ACK，PSH，RST，SYN，FIN。
+CWR ，ECE 两个flag是用来配合做congestion control的，一般情况下和应用层关系不大。发送方的包ECE（ECN－Echo）为0的时候表示出现了congestion，接收方回的包里CWR（Congestion Window Reduced）为1表明收到congestion信息并做了处理。我们重点看其他六个flag。
+URG URG代表Urgent，表明包的优先级高，需要优先传送对方并处理。像我们平时使用terminal的时候经常ctrl+c来结束某个任务，这种命令产生的网络数据包就需要urgent。
+ACK 也就是我们所熟悉的ack包，用来告诉对方上一个数据包已经成功收到。不过一般不会为了ack单独发送一个包，都是在下一个要发送的packet里设置ack位，这属于tcp的优化机制，参见delayed ack。
+PSH Push我们上面解释过，接收方接收到P位的flag包需要马上将包交给应用层处理，一般我们在http request的最后一个包里都能看到P位被设置。
+RST Reset位，表明packet的发送方马上就要断开当前连接了。在http请求结束的时候一般可以看到一个数据包设置了RST位。
+SYN SYN位在发送建立连接请求的时候会设置，我们所熟悉的tcp三次握手就是syn和ack位的配合：syn->syn+ack->ack。
+FIN Finish位设置了就表示发送方没有更多的数据要发送了，之后就要单向关闭连接了，接收方一般会回一个ack包。接收方再同理发送一个FIN就可以双向关闭连接了。
+这8个flag首字母分别是：C E U A P R S F。初看难以记忆，我脑洞了下，把它们组合成 supr cafe，当然少了super少了个e，我可以将就下。我们在使用tcpdump的时候会经常看到这几个flag，[S],[P],[R],[F],[.]。其他几个都好理解，[.]特殊点，是个占位符，没有其他flag被设置的时候就显示这个占位符，一般表示ack。
+                                                         2 February 2017                                                           TCPDUMP(8)
