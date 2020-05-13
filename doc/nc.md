@@ -8,35 +8,43 @@
 
 -v 动态显示
 
-+ 服务端发送
++ 服务端发送,端口后要有一个空格
 
 `nc -lvp 9001 < c.cpp`
 
-+ 客户端接收
++ 客户端接收,输出重定向到文件，接收过程不显示.
 
-`nc -vo rcv 127.0.0.1 9001`
+`nc -v 127.0.0.1 9001 > c.cpp`
 
 或者使用 -o 选项指定输出文件，输出流依然会打印到屏幕
 
-`nc -v -o filename ip port `
+`nc -v -o filename 127.0.0.1 9001 `
 
 ## 目录传输(使用tar)
 
+1. tar 创建归档文件，发送
+
 `tar -cvf - pyTest/ |nc -lvp 9000`
-存为归档文件
+
+2. 接收文件按原来的归档格式保存
+
 `nc -vo pyfile 127.0.0.1 9000`
-收到后解压
+
+3. 收到后用tar 提取
+
 `nc -vo pyfile 127.0.0.1 9000 | tar -xvf -`
 
 ## 压缩后传输
 
-`tar -cvf - ddd/ | bzip2 -z | nc -l -p 9000`
-
-`nc -n 192.168.1.100 9000 | bzip2 -d | tar -xvf -`
+1. tar 使用-z 发送
 
 `tar -zcvf - pyTest/ |nc -lvp 9000`
-存为归档文件
+
+2. 存为归档文件
+
 `nc -vo pyfile 127.0.0.1 9000`
-收到后解压
-`nc -vo pyfile 127.0.0.1 9000 | tar -zxvf -`
+
+3. 收到后解压
+
+`nc -v 127.0.0.1 9000 | tar -zxvf -`
 
