@@ -8,9 +8,7 @@ unique_ptr 由 C++11 引入，旨在替代不安全的 auto_ptr。unique_ptr 是
 
 下图演示了两个 unique_ptr 实例之间的所有权转换。
 
-unique_ptr 与原始指针一样有效，并可用于 STL 容器。将 unique_ptr 实例添加到 STL 容器运行效率很高，因为通过 unique_ptr 的移动构造函数，不再需要进行复制操作。unique_ptr 指针与其所指对象的关系：在智能指针生命周期内，可以改变智能指针所指对象，如创建智能指针时通过构造函数指定、通过 reset 方法重新指定、通过 release 方法释放所有权、通过移动语义转移所有权，unique_ptr 还可能没有对象，这种情况被称为 empty。[6] ^{[6]} 
-[6]
- 。
+unique_ptr 与原始指针一样有效，并可用于 STL 容器。将 unique_ptr 实例添加到 STL 容器运行效率很高，因为通过 unique_ptr 的移动构造函数，不再需要进行复制操作。unique_ptr 指针与其所指对象的关系：在智能指针生命周期内，可以改变智能指针所指对象，如创建智能指针时通过构造函数指定、通过 reset 方法重新指定、通过 release 方法释放所有权、通过移动语义转移所有权，unique_ptr 还可能没有对象，这种情况被称为 empty。
 
 unique_ptr的基本操作有：
 ```
@@ -142,9 +140,9 @@ p[0] = 0;// 重载了operator[]
 
 ```
 void end_connection(connection *p) { disconnect(*p); } //资源清理函数  
-
 //资源清理器的“类型” 
-unique_ptr<connection, decltype(end_connection)*> p(&c, end_connection);// 传入函数名，会自动转换为函数指针  
+unique_ptr<connection, decltype(end_connection)*> p(&c, end_connection);
+// 传入函数名，会自动转换为函数指针  
 ```
 综上所述，基于 unique_ptr 的安全性和扩充的功能，unique_ptr 成功的将 auto_ptr 取而代之。
 
@@ -530,12 +528,13 @@ weak_ptr 对象引用资源时不会增加引用计数，但是它能够通过 l
 在了解 STL 的四种智能指针后，大家可能会想另一个问题：在实际应用中，应使用哪种智能指针呢？
 
 下面给出几个使用指南。
-（1）如果程序要使用多个指向同一个对象的指针，应选择 shared_ptr。这样的情况包括：
-（a）将指针作为参数或者函数的返回值进行传递的话，应该使用 shared_ptr；
-（b）两个对象都包含指向第三个对象的指针，此时应该使用 shared_ptr 来管理第三个对象；
-（c）STL 容器包含指针。很多 STL 算法都支持复制和赋值操作，这些操作可用于 shared_ptr，但不能用于 unique_ptr（编译器发出warning）和 auto_ptr（行为不确定）。如果你的编译器没有提供 shared_ptr，可使用 Boost 库提供的 shared_ptr。
+1. 如果程序要使用多个指向同一个对象的指针，应选择 shared_ptr。这样的情况包括：
 
-（2）如果程序不需要多个指向同一个对象的指针，则可使用 unique_ptr。如果函数使用 new 分配内存，并返还指向该内存的指针，将其返回类型声明为 unique_ptr 是不错的选择。这样，所有权转让给接受返回值的 unique_ptr，而该智能指针将负责调用 delete。可将 unique_ptr 存储到 STL 容器中，只要不调用将一个 unique_ptr 复制或赋值给另一个的算法（如 sort()）。例如，可在程序中使用类似于下面的代码段。
++ （a）将指针作为参数或者函数的返回值进行传递的话，应该使用 shared_ptr；
++ （b）两个对象都包含指向第三个对象的指针，此时应该使用 shared_ptr 来管理第三个对象；
++ （c）STL 容器包含指针。很多 STL 算法都支持复制和赋值操作，这些操作可用于 shared_ptr，但不能用于 unique_ptr（编译器发出warning）和 auto_ptr（行为不确定）。
+
+2. 如果程序不需要多个指向同一个对象的指针，则可使用 unique_ptr。如果函数使用 new 分配内存，并返还指向该内存的指针，将其返回类型声明为 unique_ptr 是不错的选择。这样，所有权转让给接受返回值的 unique_ptr，而该智能指针将负责调用 delete。可将 unique_ptr 存储到 STL 容器中，只要不调用将一个 unique_ptr 复制或赋值给另一个的算法（如 sort()）。例如，可在程序中使用类似于下面的代码段。
 ```
 unique_ptr<int> make_int(int n)
 {
