@@ -1,3 +1,0 @@
-/home/ims/Documents/comTutor/plane/ckbuild_ft/CMakeFiles/rebuild_cache.dir
-/home/ims/Documents/comTutor/plane/ckbuild_ft/CMakeFiles/plane.dir
-/home/ims/Documents/comTutor/plane/ckbuild_ft/CMakeFiles/edit_cache.dir
