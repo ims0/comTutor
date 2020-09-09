@@ -1,17 +1,17 @@
-#include	"unpipc.h"
+#include    "unpipc.h"
 
 int
 main(int argc, char **argv)
 {
-	int		i, msqid;
-	struct msqid_ds	info;
+    int        i, msqid;
+    struct msqid_ds    info;
 
-	for (i = 0; i < 10; i++) {
-		msqid = Msgget(IPC_PRIVATE, SVMSG_MODE | IPC_CREAT);
-		Msgctl(msqid, IPC_STAT, &info);
-		printf("msqid = %d, seq = %lu\n", msqid, info.msg_perm.seq);
+    for (i = 0; i < 10; i++) {
+        msqid = Msgget(IPC_PRIVATE, SVMSG_MODE | IPC_CREAT);
+        Msgctl(msqid, IPC_STAT, &info);
+        printf("msqid = %d, seq = %hu\n", msqid, info.msg_perm.__seq);
 
-		Msgctl(msqid, IPC_RMID, NULL);
-	}
-	exit(0);
+        Msgctl(msqid, IPC_RMID, NULL);
+    }
+    exit(0);
 }

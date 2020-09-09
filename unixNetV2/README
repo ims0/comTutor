@@ -46,6 +46,18 @@ If all that works, you're all set to start compiling individual programs.
 
 Notice that all the source code assumes tabs every 4 columns, not 8.
 
+NEED MODIFY
+
+1. modify in config.h
+//#define    uint8_t unsigned char                /* <sys/types.h> */
+//#define    uint16_t unsigned short                /* <sys/types.h> */
+//#define    uint32_t unsigned int                /* <sys/types.h> */
+
+2. modify in Make.defines
+CFLAGS = -g -O2 -D_GNU_SOURCE -D__USE_GNU -D_REENTRANT -Wall
+
+===========
+
 MORE DETAILS
 ============
 
