@@ -1,0 +1,4 @@
+pxmsg/*.o
+svmsg/*.o
+lib/*.o
+*.a
