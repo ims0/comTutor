@@ -1,4 +1,5 @@
-pxmsg/*.o
-svmsg/*.o
-lib/*.o
+Make.defines
+Makefile
+config.*
+*.o
 *.a

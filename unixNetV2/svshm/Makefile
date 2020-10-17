@@ -1,6 +1,6 @@
 include ../Make.defines
 
-PROGS =	shmget shmrmid shmread shmreadid shmwrite limits
+PROGS =	shmget shmrmid shmread shmreadid shmwrite limits srcshmtest
 
 all:	${PROGS}
 
@@ -22,5 +22,7 @@ shmwrite:	shmwrite.o
 limits:	limits.o
 		${CC} ${CFLAGS} -o $@ limits.o ${LIBS}
 
+srcshmtest:	srcshmtest.o
+		${CC} ${CFLAGS} -o $@ srcshmtest.o ${LIBS}
 clean:
 		rm -f ${PROGS} ${CLEANFILES}
