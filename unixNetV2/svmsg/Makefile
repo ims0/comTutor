@@ -1,7 +1,7 @@
 include ../Make.defines
 
 PROGS =	ctl limits slot slotseq twoqueues testumask \
-		msgcreate msgsnd msgrcv msgrcvid msgrmid
+		msgcreate msgsnd msgrcv msgrcvid msgrmid srctest
 
 all:	${PROGS}
 
@@ -38,5 +38,7 @@ twoqueues:	twoqueues.o
 testumask:	testumask.o
 		${CC} ${CFLAGS} -o $@ testumask.o ${LIBS}
 
+srctest:	srctest.o
+		${CC} ${CFLAGS} -o $@ srctest.o ${LIBS}
 clean:
 		rm -f ${PROGS} ${CLEANFILES}
