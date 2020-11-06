@@ -26,10 +26,12 @@ int main(int argc, char **argv) {
 
   /* 4check that ptr[0] = 0, ptr[1] = 1, etc. */
 
-  printf("ds_buff.shm_segsz = %zu\n", ds_buff.shm_segsz);
+  printf("ds_buff.shm_segsz = %zu\nds_buff.shm_nattch = %zu\nds_buff.shm_cpid = %d\n",
+         ds_buff.shm_segsz, ds_buff.shm_nattch, ds_buff.shm_cpid);
   for (size_t i = 0; i < ds_buff.shm_segsz; i++)
     *ptr++ = i % 256;
 
+  shmdt(ptr);//not necessary, can be auto remove
   sleep(10);
   shmctl(memid, IPC_RMID, NULL); // delete
   return 0;
