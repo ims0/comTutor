@@ -1,23 +1,22 @@
-#include	"unpipc.h"
+#include "unpipc.h"
 
-int
-main(int argc, char **argv)
-{
-	int		i, id;
-	struct shmid_ds	buff;
-	unsigned char	c, *ptr;
+int main(int argc, char **argv) {
+  if (argc != 2)
+    err_quit("usage: shmread <id>");
 
-	if (argc != 2)
-		err_quit("usage: shmread <id>");
+  int id = atol(argv[1]);
+  unsigned char *ptr = (unsigned char *)Shmat(id, NULL, 0);
 
-	id = atol(argv[1]);
-	ptr = Shmat(id, NULL, 0);
-	Shmctl(id, IPC_STAT, &buff);
+  struct shmid_ds buff;
+  Shmctl(id, IPC_STAT, &buff);
 
-		/* 4check that ptr[0] = 0, ptr[1] = 1, etc. */
-	for (i = 0; i < buff.shm_segsz; i++)
-		if ( (c = *ptr++) != (i % 256))
-			err_ret("ptr[%d] = %d", i, c);
+  /* 4check that ptr[0] = 0, ptr[1] = 1, etc. */
+  unsigned char c;
+  for (size_t i = 0; i < buff.shm_segsz; i++)
+    if ((c = *ptr++) != (i % 256))
+      err_ret("ptr[%d] = %d", i, c);
+    else
+      puts("ok");
 
-	exit(0);
+  exit(0);
 }

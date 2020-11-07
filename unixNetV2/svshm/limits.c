@@ -2,7 +2,7 @@
 
 #define MAX_NIDS 4096
 
-int main(int argc, char **argv)
+int main()
 /* $$.bp$$ */
 {
   int i, j, shmid[MAX_NIDS];
