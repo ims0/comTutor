@@ -7,23 +7,34 @@
 curr_path=$(cd `dirname $0`; pwd)
 echo $curr_path
 
-if [ $# != 1 ];then
+if [ $# != 2 ];then
     echo "need path arg!"
     exit 1
 fi
 
-if [ ! -d $1 ];then
-    echo "dir not exist!"
+if [ ! -e $1 ];then
+    echo "exe not exist!"
     exit 2
 fi
+if [ ! -d $2 ];then
+    echo "dir not exist!"
+    exit 3
+fi
+exe_file=$1
+src_dir=$2
+
 logfile=log
 echo "" >$logfile
 
 function doCheck() {
     file=$1
-    if [ "${file##*.}"x = "cpp"x ]||[ "${file##*.}"x = "c"x ];then
+    if [ "${file##*.}"x = "cpp"x ]||[ "${file##*.}"x = "c"x ]||[ "${file##*.}"x = "cc"x ]||[ "${file##*.}"x = "h"x ];then
         echo $dir_or_file
-        ./a.out $dir_or_file>>$logfile
+        ./$exe_file $dir_or_file>>$logfile
+        echo $?
+    elif [ "${file##*.}"x = "lua"x ];then
+        echo $dir_or_file
+        ./$exe_file $dir_or_file>>$logfile  lua
         echo $?
     fi
 }
@@ -40,4 +51,4 @@ function getdir(){
     done
 }
 
-getdir $1
+getdir $src_dir
