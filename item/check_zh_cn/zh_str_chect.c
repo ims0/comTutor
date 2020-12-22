@@ -213,7 +213,7 @@ void remove_lua_annotation(char *buf, size_t size) {
             block_annotation = p;
             p += 4;
           }
-          else if( *(p + 2) == ']' && *(p + 3) == ']' )
+          else if( block_annotation && *(p + 2) == ']' && *(p + 3) == ']' )
           {
             p += 4;
             memset(block_annotation, ' ', p - block_annotation);
@@ -225,6 +225,20 @@ void remove_lua_annotation(char *buf, size_t size) {
           }
         } else { 
           p++;
+        }
+        break;
+      case ']':
+        if (line_annotation ) {
+          p++;
+          continue;
+        }
+        if( block_annotation && (*(p + 1) == ']'))
+        {
+           p += 2;
+           memset(block_annotation, ' ', p - block_annotation);
+           block_annotation = NULL;
+        } else{
+            p++;
         }
         break;
       case '\n':

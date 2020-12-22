@@ -29,13 +29,23 @@ echo "" >$logfile
 function doCheck() {
     file=$1
     if [ "${file##*.}"x = "cpp"x ]||[ "${file##*.}"x = "c"x ]||[ "${file##*.}"x = "cc"x ]||[ "${file##*.}"x = "h"x ];then
-        echo $dir_or_file
+        file $dir_or_file |grep BOM > /dev/null
+        if [ $? == 0 ];then
+            sed  '1 s/^\xef\xbb\xbf//' $dir_or_file >nobom_tem
+            dir_or_file=nobom_tem
+        fi
         ./$exe_file $dir_or_file>>$logfile
-        echo $?
+        if [ $? == 1 ];then
+            file $dir_or_file |tee -a $logfile
+        fi
     elif [ "${file##*.}"x = "lua"x ];then
-        echo $dir_or_file
-        ./$exe_file $dir_or_file>>$logfile  lua
-        echo $?
+        file $dir_or_file |grep text > /dev/null
+        if [ $? == 0 ];then
+            ./$exe_file $dir_or_file>>$logfile  lua
+            if [ $? == 1 ];then
+                file $dir_or_file |tee -a $logfile
+            fi
+        fi
     fi
 }
 
