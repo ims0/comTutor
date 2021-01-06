@@ -3,7 +3,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#define BUFF_LEN 5
+#define BUFF_LEN 5000
 
 int file_size(const char *filename);
 void remove_c_annotation(char *buf, size_t size);
