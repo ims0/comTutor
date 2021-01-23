@@ -3,9 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-
-#define BUFF_LEN 5000
-
 #define BUFF_LEN 10000
 #define HEX_BYTE_EF -17
 #define HEX_BYTE_BB -69
@@ -22,6 +19,7 @@ enum ReturnCode
 int file_size(const char *filename);
 void remove_c_annotation(char *buf, size_t size);
 void remove_lua_annotation(char *buf, size_t size);
+void remove_python_annotation(char *buf, size_t size);
 
 int check_zh_cn(char str[], int len) {
   int i = 0;
@@ -49,7 +47,7 @@ int remove_anno_and_check(char *buf, int bufSize, FILE *fp, const char *filetype
   else if(strcmp(filetype, "lua") == 0)
     remove_lua_annotation(buf, read_len);
   else if(strcmp(filetype, "python") == 0)
-    remove_lua_annotation(buf, read_len);
+    remove_python_annotation(buf, read_len);
   else
     return FILE_TYPE_ERR;
   printf("-----code-----\n%s\n", buf);
@@ -67,7 +65,6 @@ int main(int argc, char *argv[]) {
     return FILE_NAME_ERR;
   }
   int fileSize = file_size(argv[1]);
-  printf("BUFF_LEN:%d,file byte size:%d \n", BUFF_LEN, fileSize);
   int result = SUCEESS;
   if (fileSize < BUFF_LEN) {
     char buf[BUFF_LEN];
@@ -100,18 +97,17 @@ void remove_c_annotation(char *buf, size_t size) {
     switch (c) {
       case '\'':
         if (double_quote || line_annotation ||
-            block_annotation) //在双引号或者注释区域的单引号直接跳过
+            block_annotation)
         {
           p++;
           continue;
         }
-        if (single_quote == NULL) //第一个单引号，记录起点
+        if (single_quote == NULL) 
         {
           single_quote = p++;
-        } else { //语句中的第二个单引号，
+        } else {
           len = p++ - single_quote;
           if (len == 2 && *(single_quote + 1) == '\\')
-            //遇到'\'~~的情况
           {
             continue;
           }
@@ -126,7 +122,7 @@ void remove_c_annotation(char *buf, size_t size) {
         if (double_quote == NULL) {
           double_quote = p++;
         } else {
-          if (slash_is_single(p-1)) //忽略反斜杠后面的双引号
+          if (slash_is_single(p-1))
           {
             p++;
             continue;
@@ -140,14 +136,14 @@ void remove_c_annotation(char *buf, size_t size) {
           continue;
         }
         c = *(p + 1);
-        if (c == '/') //遇到双斜杠，行注释
+        if (c == '/')
         {
           line_annotation = p;
           p += 2;
-        } else if (c == '*') { //块注释
+        } else if (c == '*') {
           block_annotation = p;
           p += 2;
-        } else { //除号，跳过
+        } else {
           p++;
         }
         break;
@@ -157,13 +153,13 @@ void remove_c_annotation(char *buf, size_t size) {
           p++;
           continue;
         }
-        if (*(p + 1) != '/') //不是块注释结尾
+        if (*(p + 1) != '/')
         {
           p++;
           continue;
         }
         p += 2;
-        memset(block_annotation, ' ', p - block_annotation); //块注释的结尾
+        memset(block_annotation, ' ', p - block_annotation);
         block_annotation = NULL;
         break;
       case '\n':
@@ -171,7 +167,7 @@ void remove_c_annotation(char *buf, size_t size) {
           p++;
           continue;
         }
-        c = *(p - 1); //行注释的结尾
+        c = *(p - 1);
         memset(line_annotation, ' ',
             (c == '\r' ? (p++ - 1) : p++) - line_annotation);
         line_annotation = NULL;
@@ -196,18 +192,17 @@ void remove_lua_annotation(char *buf, size_t size) {
     switch (c) {
       case '\'':
         if (double_quote || line_annotation ||
-            block_annotation) //在双引号或者注释区域的单引号直接跳过
+            block_annotation)
         {
           p++;
           continue;
         }
-        if (single_quote == NULL) //第一个单引号，记录起点
+        if (single_quote == NULL)
         {
           single_quote = p++;
-        } else { //语句中的第二个单引号，
+        } else {
           len = p++ - single_quote;
           if (len == 2 && *(single_quote + 1) == '\\')
-            //遇到'\'~~的情况
           {
             continue;
           }
@@ -222,7 +217,7 @@ void remove_lua_annotation(char *buf, size_t size) {
         if (double_quote == NULL) {
           double_quote = p++;
         } else {
-          if (*(p++ - 1) == '\\') //忽略反斜杠后面的双引号
+          if (*(p++ - 1) == '\\') 
           {
             continue;
           }
@@ -230,27 +225,17 @@ void remove_lua_annotation(char *buf, size_t size) {
         }
         break;
       case '-':
-        if (single_quote || double_quote || line_annotation) {
+        if (single_quote || double_quote || line_annotation || block_annotation) {
           p++;
           continue;
         }
-        c = *(p + 1);
-        if (c == '-')
-        {
-          if( *(p + 2) == '[' && *(p + 3) == '[' )
-          {
+        if (*(p + 1) == '-') {
+          if( *(p + 2) == '[' && *(p + 3) == '[' ) {
             block_annotation = p;
             p += 4;
-          }
-          else if( block_annotation && *(p + 2) == ']' && *(p + 3) == ']' )
-          {
-            p += 4;
-            memset(block_annotation, ' ', p - block_annotation);
-            block_annotation = NULL;
-          }
-          else{
+          } else{
             line_annotation = p;
-            p += 2;
+            p = p+2;
           }
         } else { 
           p++;
@@ -275,7 +260,7 @@ void remove_lua_annotation(char *buf, size_t size) {
           p++;
           continue;
         }
-        c = *(p - 1); //行注释的结尾
+        c = *(p - 1);
         memset(line_annotation, ' ',
             (c == '\r' ? (p++ - 1) : p++) - line_annotation);
         line_annotation = NULL;
@@ -288,6 +273,10 @@ void remove_lua_annotation(char *buf, size_t size) {
   if (line_annotation) {
     memset(line_annotation, ' ', p - line_annotation);
   }
+}
+
+void remove_python_annotation(char *buf, size_t size){
+
 }
 int file_size(const char *filename) {
   struct stat statbuf;

@@ -76,24 +76,24 @@ fi
 #lua language
 $exe_file  $curr_path/test_file_dir/en.lua lua
 if [[ $? != 0 ]];then
-    echo "unit test c language en fail"
+    echo "unit test lua language en fail"
     exit 2
 fi
 $exe_file  $curr_path/test_file_dir/zh.lua lua > /dev/null
 if [[ $? == 0 ]];then
-    echo "unit test c language zh fail"
+    echo "unit test lua language zh fail"
     exit 2
 fi
 
 #python language
 $exe_file  $curr_path/test_file_dir/en.py python
 if [[ $? != 0 ]];then
-    echo "unit test c language en fail"
+    echo "unit test python language en fail"
     exit 2
 fi
 $exe_file  $curr_path/test_file_dir/zh.py python > /dev/null
 if [[ $? == 0 ]];then
-    echo "unit test c language zh fail"
+    echo "unit test python language zh fail"
     exit 2
 fi
 
