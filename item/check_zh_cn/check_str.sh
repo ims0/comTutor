@@ -1,9 +1,5 @@
 #!/bin/bash
-##########################################################
-# File Name: check_str.sh
-# Author: ims
-# Created Time: 2020年12月13日 星期日 13时57分39秒
-##########################################################
+
 curr_path=$(cd `dirname $0`; pwd)
 echo $curr_path
 
@@ -12,11 +8,11 @@ if [ $# != 1 ];then
     exit 1
 fi
 
+
 if [ ! -d $1 ];then
     echo "dir not exist!"
     exit 2
 fi
-
 
 exe_name=check_exe
 exe_file=$curr_path/$exe_name
@@ -36,7 +32,6 @@ function callExeCheck(){
     fi
 }
 
-
 function doCheck() {
     fileName=$1
     if [ "${fileName##*.}"x = "cpp"x ]||[ "${fileName##*.}"x = "c"x ]||[ "${fileName##*.}"x = "cc"x ]||[ "${fileName##*.}"x = "h"x ];then
@@ -51,11 +46,14 @@ function doCheck() {
     fi
 }
 
-
+#recursion
 function check(){
     for element in `ls $1`
     do
         dir_or_file=$1"/"$element
+        #echo $dir_or_file
+        #[[ ! -e $dir_or_file ]]|| continue
+
         if [ -d $dir_or_file ] ;then
             check $dir_or_file
         else
@@ -63,12 +61,43 @@ function check(){
         fi
     done
 }
-
+#c language
 $exe_file  $curr_path/test_file_dir/en.c cpp
-if [[ $? == 0 ]];then
+if [[ $? != 0 ]];then
     echo "unit test c language en fail"
     exit 2
 fi
+$exe_file  $curr_path/test_file_dir/zh.c cpp > /dev/null
+if [[ $? == 0 ]];then
+    echo "unit test c language zh fail"
+    exit 2
+fi
 
+#lua language
+$exe_file  $curr_path/test_file_dir/en.lua cpp
+if [[ $? != 0 ]];then
+    echo "unit test c language en fail"
+    exit 2
+fi
+$exe_file  $curr_path/test_file_dir/zh.lua cpp > /dev/null
+if [[ $? == 0 ]];then
+    echo "unit test c language zh fail"
+    exit 2
+fi
 
-getdir $src_dir
+#python language
+$exe_file  $curr_path/test_file_dir/en.py cpp
+if [[ $? != 0 ]];then
+    echo "unit test c language en fail"
+    exit 2
+fi
+$exe_file  $curr_path/test_file_dir/zh.py cpp > /dev/null
+if [[ $? == 0 ]];then
+    echo "unit test c language zh fail"
+    exit 2
+fi
+
+echo "======= unit test succ ======="
+echo "check dir :"$src_dir
+echo "======= The following file include chinese string ======="
+check $src_dir
