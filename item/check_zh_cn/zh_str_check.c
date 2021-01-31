@@ -31,7 +31,17 @@ typedef struct {
   int char_val;
   AnnoProcFunc func;
 } FuncMap;
+int single_quote_proc(char *offset, AnnotationFlag *cFlag);
+int double_quote_proc(char *offset, AnnotationFlag *cFlag);
+int c_slash_proc(char *offset, AnnotationFlag *cFlag);
+int c_star_proc(char *offset, AnnotationFlag *cFlag);
+int end_proc(char *offset, AnnotationFlag *cFlag);
 
+FuncMap cFuncMap[] = {{'\'', single_quote_proc},
+                      {'\"', double_quote_proc},
+                      {'/', c_slash_proc},
+                      {'*', c_star_proc},
+                      {'\n', end_proc}};
 // python struct define
 typedef struct {
   char *single_quote, *double_quote, *line_annotation, *three_single_quote,
@@ -43,6 +53,41 @@ typedef struct {
   int char_val;
   AnnoProcFunc func;
 } PyFuncMap;
+
+int sub_proc(char *offset, AnnotationFlag *flag);
+int close_bracket_proc(char *offset, AnnotationFlag *flag);
+
+FuncMap luaFuncMap[] = {{'\'', single_quote_proc},
+                        {'\"', double_quote_proc},
+                        {'-', sub_proc},
+                        {']', close_bracket_proc},
+                        {'\n', end_proc}};
+
+int remove_anno_and_check(char *buf, int bufSize, FILE *fp,
+                          const char *filetype);
+int main(int argc, char *argv[]) {
+  if (argc < 3) {
+    puts("need a arg:c or cpp file");
+    return ARGC_ERR;
+  }
+  FILE *fp = fopen(argv[1], "r");
+  if (fp == NULL) {
+    puts("fopen fail");
+    return FILE_NAME_ERR;
+  }
+  int fileSize = file_size(argv[1]);
+  int result = SUCEESS;
+  if (fileSize < BUFF_LEN) {
+    char buf[BUFF_LEN];
+    result = remove_anno_and_check(buf, fileSize, fp, argv[2]);
+  } else {
+    void *mBuf = malloc(fileSize);
+    result = remove_anno_and_check((char *)mBuf, fileSize, fp, argv[2]);
+    free(mBuf);
+  }
+  fclose(fp);
+  return result;
+}
 
 int check_zh_cn(char str[], int len) {
   int i = 0;
@@ -80,29 +125,6 @@ int remove_anno_and_check(char *buf, int bufSize, FILE *fp,
   return check_zh_cn(buf, read_len);
 }
 
-int main(int argc, char *argv[]) {
-  if (argc < 3) {
-    puts("need a arg:c or cpp file");
-    return ARGC_ERR;
-  }
-  FILE *fp = fopen(argv[1], "r");
-  if (fp == NULL) {
-    puts("fopen fail");
-    return FILE_NAME_ERR;
-  }
-  int fileSize = file_size(argv[1]);
-  int result = SUCEESS;
-  if (fileSize < BUFF_LEN) {
-    char buf[BUFF_LEN];
-    result = remove_anno_and_check(buf, fileSize, fp, argv[2]);
-  } else {
-    void *mBuf = malloc(fileSize);
-    result = remove_anno_and_check((char *)mBuf, fileSize, fp, argv[2]);
-    free(mBuf);
-  }
-  fclose(fp);
-  return result;
-}
 static int slash_is_single(const char *ptr) {
   const char *iter = ptr;
   int cnt = 0;
@@ -185,12 +207,6 @@ int end_proc(char *offset, AnnotationFlag *cFlag) {
   return 1;
 }
 
-FuncMap cFuncMap[] = {{'\'', single_quote_proc},
-                      {'\"', double_quote_proc},
-                      {'/', c_slash_proc},
-                      {'*', c_star_proc},
-                      {'\n', end_proc}};
-
 AnnoProcFunc find_proc_func(int ch, FuncMap funcMap[], size_t len) {
   size_t map_size = len / sizeof(FuncMap);
   for (size_t i = 0; i < map_size; i++) {
@@ -245,12 +261,6 @@ int close_bracket_proc(char *offset, AnnotationFlag *flag) {
   }
   return 1;
 }
-
-FuncMap luaFuncMap[] = {{'\'', single_quote_proc},
-                        {'\"', double_quote_proc},
-                        {'-', sub_proc},
-                        {']', close_bracket_proc},
-                        {'\n', end_proc}};
 
 void remove_lua_annotation(char *buf, size_t size) {
   char *p = buf, *end = buf + size;
@@ -326,7 +336,7 @@ int py_quote_proc(char *offset, PythonProcArgu *flag) {
 }
 
 void remove_python_annotation(char *buf, size_t size) {
-  char *p = buf, *end = buf + size, c;
+  char *p = buf, *end = buf + size;
   PythonProcArgu argu = {NULL, NULL, NULL, NULL, NULL};
 
   while (p < end) {
@@ -344,9 +354,8 @@ void remove_python_annotation(char *buf, size_t size) {
         p++;
         continue;
       }
-      c = *(p - 1);
       memset(argu.line_annotation, ' ',
-             (c == '\r' ? (p++ - 1) : p++) - argu.line_annotation);
+             (*(p - 1) == '\r' ? (p++ - 1) : p++) - argu.line_annotation);
       argu.line_annotation = NULL;
     } else {
       p++;
