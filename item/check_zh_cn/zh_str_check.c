@@ -25,7 +25,7 @@ typedef struct {
   char *single_quote, *double_quote, *line_annotation, *block_annotation;
 } AnnotationFlag;
 
-typedef void (*AnnoProcFunc)(char **offset, AnnotationFlag *cFlag);
+typedef int (*AnnoProcFunc)(char *offset, AnnotationFlag *cFlag);
 
 typedef struct {
   int char_val;
@@ -103,83 +103,76 @@ static int slash_is_single(const char *ptr) {
   return cnt % 2;
 }
 
-void single_quote_proc(char **offset, AnnotationFlag *cFlag) {
+int single_quote_proc(char *offset, AnnotationFlag *cFlag) {
   if (cFlag->double_quote || cFlag->line_annotation ||
       cFlag->block_annotation) {
-    (*offset)++;
-    return;
+    return 1;
   }
   size_t len = 0;
   if (cFlag->single_quote == NULL) {
-    cFlag->single_quote = (*offset)++;
+    cFlag->single_quote = offset;
+    return 1;
   } else {
-    len = (*offset)++ - cFlag->single_quote;
+    len = offset - cFlag->single_quote;
     if (len == 2 && *(cFlag->single_quote + 1) == '\\') {
-      return;
+      return 1;
     }
     cFlag->single_quote = NULL;
+    return 1;
   }
 }
 
-void double_quote_proc(char **offset, AnnotationFlag *cFlag) {
+int double_quote_proc(char *offset, AnnotationFlag *cFlag) {
   if (cFlag->single_quote || cFlag->line_annotation ||
       cFlag->block_annotation) {
-    (*offset)++;
-    return;
+    return 1;
   }
   if (cFlag->double_quote == NULL) {
-    cFlag->double_quote = (*offset)++;
+    cFlag->double_quote = offset;
   } else {
-    if (slash_is_single((*offset) - 1)) {
-      (*offset)++;
-      return;
+    if (slash_is_single(offset - 1)) {
+      return 1;
     }
     cFlag->double_quote = NULL;
   }
+  return 1;
 }
 
-void c_slash_proc(char **offset, AnnotationFlag *cFlag) {
+int c_slash_proc(char *offset, AnnotationFlag *cFlag) {
   if (cFlag->single_quote || cFlag->double_quote || cFlag->line_annotation ||
       cFlag->block_annotation) {
-    (*offset)++;
-    return;
+    return 1;
   }
-  if (*((*offset) + 1) == '/') {
-    cFlag->line_annotation = (*offset);
-    (*offset) += 2;
-  } else if (*((*offset) + 1) == '*') {
-    cFlag->block_annotation = (*offset);
-    (*offset) += 2;
+  if (*(offset + 1) == '/') {
+    cFlag->line_annotation = offset;
+    return 2;
+  } else if (*(offset + 1) == '*') {
+    cFlag->block_annotation = offset;
+    return 2;
   } else {
-    (*offset)++;
+    return 1;
   }
 }
 
-void c_star_proc(char **offset, AnnotationFlag *cFlag) {
+int c_star_proc(char *offset, AnnotationFlag *cFlag) {
   if (cFlag->single_quote || cFlag->double_quote || cFlag->line_annotation ||
-      cFlag->block_annotation == NULL) {
-    (*offset)++;
-    return;
+      cFlag->block_annotation == NULL || *(offset + 1) != '/') {
+    return 1;
   }
-  if (*((*offset) + 1) != '/') {
-    (*offset)++;
-    return;
-  }
-  (*offset) += 2;
-  memset(cFlag->block_annotation, ' ', (*offset) - cFlag->block_annotation);
+  memset(cFlag->block_annotation, ' ', offset + 2 - cFlag->block_annotation);
   cFlag->block_annotation = NULL;
+  return 2;
 }
 
-void end_proc(char **offset, AnnotationFlag *cFlag) {
+int end_proc(char *offset, AnnotationFlag *cFlag) {
   if (cFlag->line_annotation == NULL) {
-    (*offset)++;
-    return;
+    return 1;
   }
-  char c = *((*offset) - 1);
+  char c = *(offset - 1);
   memset(cFlag->line_annotation, ' ',
-         (c == '\r' ? ((*offset)++ - 1) : (*offset)++) -
-             cFlag->line_annotation);
+         (c == '\r' ? offset - 1 : offset) - cFlag->line_annotation);
   cFlag->line_annotation = NULL;
+  return 1;
 }
 
 FuncMap cFuncMap[] = {{'\'', single_quote_proc},
@@ -193,14 +186,10 @@ void remove_c_annotation(char *buf, size_t size) {
   AnnotationFlag cFlag = {NULL, NULL, NULL, NULL};
   size_t map_size = sizeof(cFuncMap) / sizeof(FuncMap);
   while (p < end) {
-    size_t i = 0;
-    for (; i < map_size; i++) {
+    for (size_t i = 0; i < map_size; i++) {
       if (*p == cFuncMap[i].char_val) {
-        cFuncMap[i].func(&p, &cFlag);
+        p += cFuncMap[i].func(p, &cFlag);
       }
-    }
-    if (i == map_size) {
-      p++;
     }
   }
   if (cFlag.line_annotation) {
@@ -208,37 +197,33 @@ void remove_c_annotation(char *buf, size_t size) {
   }
 }
 
-void sub_proc(char **offset, AnnotationFlag *flag) {
+int sub_proc(char *offset, AnnotationFlag *flag) {
   if (flag->single_quote || flag->double_quote || flag->line_annotation ||
       flag->block_annotation) {
-    (*offset)++;
-    return;
+    return 1;
   }
-  if (*((*offset) + 1) == '-') {
-    if (*((*offset) + 2) == '[' && *((*offset) + 3) == '[') {
-      flag->block_annotation = (*offset);
-      (*offset) += 4;
+  if (*(offset + 1) == '-') {
+    if (*(offset + 2) == '[' && *(offset + 3) == '[') {
+      flag->block_annotation = offset;
+      return 4;
     } else {
-      flag->line_annotation = (*offset);
-      (*offset) = (*offset) + 2;
+      flag->line_annotation = offset;
+      return 2;
     }
-  } else {
-    (*offset)++;
   }
+  return 1;
 }
 
-void close_bracket_proc(char **offset, AnnotationFlag *flag) {
+int close_bracket_proc(char *offset, AnnotationFlag *flag) {
   if (flag->line_annotation) {
-    (*offset)++;
-    return;
+    return 1;
   }
-  if (flag->block_annotation && (*((*offset) + 1) == ']')) {
-    (*offset) += 2;
-    memset(flag->block_annotation, ' ', (*offset) - flag->block_annotation);
+  if (flag->block_annotation && (*(offset + 1) == ']')) {
+    memset(flag->block_annotation, ' ', offset + 2 - flag->block_annotation);
     flag->block_annotation = NULL;
-  } else {
-    (*offset)++;
+    return 2;
   }
+  return 1;
 }
 
 FuncMap luaFuncMap[] = {{'\'', single_quote_proc},
@@ -251,14 +236,16 @@ void remove_lua_annotation(char *buf, size_t size) {
   char *p = buf, *end = buf + size;
   AnnotationFlag flag = {NULL, NULL, NULL, NULL};
   size_t map_size = sizeof(luaFuncMap) / sizeof(FuncMap);
+  int is_comm_char = 1;
   while (p < end) {
     size_t i = 0;
     for (; i < map_size; i++) {
       if (*p == cFuncMap[i].char_val) {
-        cFuncMap[i].func(&p, &flag);
+        cFuncMap[i].func(p, &flag);
+        is_comm_char = 0;
       }
     }
-    if (i == map_size) {
+    if (is_comm_char) {
       p++;
     }
   }
