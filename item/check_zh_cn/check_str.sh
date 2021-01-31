@@ -15,7 +15,7 @@ if [ ! -d $1 ];then
 fi
 
 if [[ $* =~ "debug" ]];then
-    debug_flag="-DDEBUG -g"
+    debug_flag="-DDEBUG -g3"
 else
     debug_flag="-O2"
 fi

@@ -283,32 +283,6 @@ static int isAssign(char *iter) {
 
 // python
 
-int py_single_quote_proc(char *offset, PythonProcArgu *flag) {
-  if (flag->line_annotation || flag->double_quote || flag->three_double_quote) {
-    return 1;
-  }
-  if (*(offset + 1) == '\'' && *(offset + 2) == '\'') {
-    if (flag->three_single_quote == NULL) {
-      flag->three_single_quote = offset;
-    } else {
-      if (!isAssign(flag->three_single_quote - 1)) {
-        memset(flag->three_single_quote, ' ',
-               offset + 3 - flag->three_single_quote);
-        flag->three_single_quote = NULL;
-      }
-      return 3;
-    }
-  }
-  if (flag->single_quote == NULL) {
-    flag->single_quote = offset;
-  } else {
-    if (*(offset - 1) != '\\') {
-      flag->single_quote = NULL;
-    }
-  }
-  return 1;
-}
-
 int single_double_quote_proc(char *offset, char **one_quote,
                              char **three_quote) {
   if (*(offset + 1) == *offset && *(offset + 2) == *offset) {
@@ -319,13 +293,13 @@ int single_double_quote_proc(char *offset, char **one_quote,
         memset(*three_quote, ' ', offset + 3 - *three_quote);
         *three_quote = NULL;
       }
-      return 3;
     }
+    return 3;
   }
   if (*one_quote == NULL) {
-    *one_quote = offset++;
+    *one_quote = offset;
   } else {
-    if (*(offset++ - 1) != '\\') {
+    if (*(offset - 1) != '\\') {
       *one_quote = NULL;
     }
   }
@@ -353,32 +327,32 @@ int py_quote_proc(char *offset, PythonProcArgu *flag) {
 
 void remove_python_annotation(char *buf, size_t size) {
   char *p = buf, *end = buf + size, c;
-  char *single_quote = 0, *double_quote = 0, *line_annotation = 0,
-       *three_single_quote = 0, *three_double_quote = 0;
   PythonProcArgu argu = {NULL, NULL, NULL, NULL, NULL};
 
   while (p < end) {
     if (*p == '\'' || *p == '\"') {
       p += py_quote_proc(p, &argu);
     } else if (*p == '#') {
-      if (single_quote || double_quote || three_single_quote ||
-          three_double_quote || line_annotation) {
+      if (argu.single_quote || argu.double_quote || argu.three_single_quote ||
+          argu.three_double_quote || argu.line_annotation) {
         p++;
+        continue;
       }
-      line_annotation = p++;
+      argu.line_annotation = p++;
     } else if (*p == '\n') {
-      if (line_annotation == NULL) {
+      if (argu.line_annotation == NULL) {
         p++;
+        continue;
       }
       c = *(p - 1);
-      memset(line_annotation, ' ',
-             (c == '\r' ? (p++ - 1) : p++) - line_annotation);
-      line_annotation = NULL;
+      memset(argu.line_annotation, ' ',
+             (c == '\r' ? (p++ - 1) : p++) - argu.line_annotation);
+      argu.line_annotation = NULL;
     } else {
       p++;
     }
   }
-  if (line_annotation) {
-    memset(line_annotation, ' ', p - line_annotation);
+  if (argu.line_annotation) {
+    memset(argu.line_annotation, ' ', p - argu.line_annotation);
   }
 }
