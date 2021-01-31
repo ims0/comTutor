@@ -3,26 +3,33 @@
 curr_path=$(cd `dirname $0`; pwd)
 echo $curr_path
 
-if [ $# != 1 ];then
-    echo "need code dir arg!"
+if [ $# -lt 1 ];then
+    echo "need argument code_dir"
+    echo "usage$ bash $0 code_dir [debug]"
     exit 1
 fi
-
 
 if [ ! -d $1 ];then
     echo "dir not exist!"
     exit 2
 fi
 
+if [[ $* =~ "debug" ]];then
+    debug_flag="-DDEBUG -g"
+else
+    debug_flag="-O2"
+fi
+
 exe_name=check_exe
 exe_file=$curr_path/$exe_name
-src_dir=`pwd`/$1
+src_dir=`pwd`/$1 
+src_file=zh_str_check.c
 logfile=$curr_path/log
 cat /dev/null >$logfile
 
 # compile file
 set -x
-gcc $curr_path/zh_str_check.c -std=c99 -O2 -o $exe_file
+gcc $debug_flag -std=c99 $curr_path/$src_file -o $exe_file
 set +x
 
 function callExeCheck(){

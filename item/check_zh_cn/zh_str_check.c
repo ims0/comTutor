@@ -50,7 +50,9 @@ int remove_anno_and_check(char *buf, int bufSize, FILE *fp,
     remove_python_annotation(buf, read_len);
   else
     return FILE_TYPE_ERR;
-  //printf("-----code-----\n%s\n", buf);
+#ifdef DEBUG
+  printf("-----code-----\n%s\n", buf);
+#endif
   return check_zh_cn(buf, read_len);
 }
 
