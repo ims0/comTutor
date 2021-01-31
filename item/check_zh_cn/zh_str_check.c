@@ -20,6 +20,20 @@ void remove_c_annotation(char *buf, size_t size);
 void remove_lua_annotation(char *buf, size_t size);
 void remove_python_annotation(char *buf, size_t size);
 
+// c / lua struct define
+typedef struct {
+  char *single_quote, *double_quote, *line_annotation, *block_annotation;
+} AnnotationFlag;
+
+typedef void (*AnnoProcFunc)(char **offset, AnnotationFlag *cFlag);
+
+typedef struct {
+  int char_val;
+  AnnoProcFunc func;
+} FuncMap;
+
+// python struct define
+
 int check_zh_cn(char str[], int len) {
   int i = 0;
   if (len > 3 && str[0] == HEX_BYTE_EF && str[1] == HEX_BYTE_BB &&
@@ -51,7 +65,7 @@ int remove_anno_and_check(char *buf, int bufSize, FILE *fp,
   else
     return FILE_TYPE_ERR;
 #ifdef DEBUG
-  printf("-----code-----\n%s\n", buf);
+  printf("----- no annotation code -----\n%s\n", buf);
 #endif
   return check_zh_cn(buf, read_len);
 }
@@ -88,179 +102,168 @@ static int slash_is_single(const char *ptr) {
   }
   return cnt % 2;
 }
-void remove_c_annotation(char *buf, size_t size) {
-  char *p = buf, *end = buf + size, c;
-  char *single_quote = 0, *double_quote = 0, *line_annotation = 0,
-       *block_annotation = 0;
-  size_t len = 0;
 
-  while (p < end) {
-    c = *p;
-    switch (c) {
-    case '\'':
-      if (double_quote || line_annotation || block_annotation) {
-        p++;
-        continue;
-      }
-      if (single_quote == NULL) {
-        single_quote = p++;
-      } else {
-        len = p++ - single_quote;
-        if (len == 2 && *(single_quote + 1) == '\\') {
-          continue;
-        }
-        single_quote = NULL;
-      }
-      break;
-    case '\"':
-      if (single_quote || line_annotation || block_annotation) {
-        p++;
-        continue;
-      }
-      if (double_quote == NULL) {
-        double_quote = p++;
-      } else {
-        if (slash_is_single(p - 1)) {
-          p++;
-          continue;
-        }
-        double_quote = NULL;
-      }
-      break;
-    case '/':
-      if (single_quote || double_quote || line_annotation || block_annotation) {
-        p++;
-        continue;
-      }
-      c = *(p + 1);
-      if (c == '/') {
-        line_annotation = p;
-        p += 2;
-      } else if (c == '*') {
-        block_annotation = p;
-        p += 2;
-      } else {
-        p++;
-      }
-      break;
-    case '*':
-      if (single_quote || double_quote || line_annotation ||
-          block_annotation == NULL) {
-        p++;
-        continue;
-      }
-      if (*(p + 1) != '/') {
-        p++;
-        continue;
-      }
-      p += 2;
-      memset(block_annotation, ' ', p - block_annotation);
-      block_annotation = NULL;
-      break;
-    case '\n':
-      if (line_annotation == NULL) {
-        p++;
-        continue;
-      }
-      c = *(p - 1);
-      memset(line_annotation, ' ',
-             (c == '\r' ? (p++ - 1) : p++) - line_annotation);
-      line_annotation = NULL;
-      break;
-    default:
-      p++;
-      break;
-    }
+void single_quote_proc(char **offset, AnnotationFlag *cFlag) {
+  if (cFlag->double_quote || cFlag->line_annotation ||
+      cFlag->block_annotation) {
+    (*offset)++;
+    return;
   }
-  if (line_annotation) {
-    memset(line_annotation, ' ', p - line_annotation);
+  size_t len = 0;
+  if (cFlag->single_quote == NULL) {
+    cFlag->single_quote = (*offset)++;
+  } else {
+    len = (*offset)++ - cFlag->single_quote;
+    if (len == 2 && *(cFlag->single_quote + 1) == '\\') {
+      return;
+    }
+    cFlag->single_quote = NULL;
   }
 }
-void remove_lua_annotation(char *buf, size_t size) {
-  char *p = buf, *end = buf + size, c;
-  char *single_quote = 0, *double_quote = 0, *line_annotation = 0,
-       *block_annotation = 0;
-  size_t len = 0;
 
+void double_quote_proc(char **offset, AnnotationFlag *cFlag) {
+  if (cFlag->single_quote || cFlag->line_annotation ||
+      cFlag->block_annotation) {
+    (*offset)++;
+    return;
+  }
+  if (cFlag->double_quote == NULL) {
+    cFlag->double_quote = (*offset)++;
+  } else {
+    if (slash_is_single((*offset) - 1)) {
+      (*offset)++;
+      return;
+    }
+    cFlag->double_quote = NULL;
+  }
+}
+
+void c_slash_proc(char **offset, AnnotationFlag *cFlag) {
+  if (cFlag->single_quote || cFlag->double_quote || cFlag->line_annotation ||
+      cFlag->block_annotation) {
+    (*offset)++;
+    return;
+  }
+  if (*((*offset) + 1) == '/') {
+    cFlag->line_annotation = (*offset);
+    (*offset) += 2;
+  } else if (*((*offset) + 1) == '*') {
+    cFlag->block_annotation = (*offset);
+    (*offset) += 2;
+  } else {
+    (*offset)++;
+  }
+}
+
+void c_star_proc(char **offset, AnnotationFlag *cFlag) {
+  if (cFlag->single_quote || cFlag->double_quote || cFlag->line_annotation ||
+      cFlag->block_annotation == NULL) {
+    (*offset)++;
+    return;
+  }
+  if (*((*offset) + 1) != '/') {
+    (*offset)++;
+    return;
+  }
+  (*offset) += 2;
+  memset(cFlag->block_annotation, ' ', (*offset) - cFlag->block_annotation);
+  cFlag->block_annotation = NULL;
+}
+
+void end_proc(char **offset, AnnotationFlag *cFlag) {
+  if (cFlag->line_annotation == NULL) {
+    (*offset)++;
+    return;
+  }
+  char c = *((*offset) - 1);
+  memset(cFlag->line_annotation, ' ',
+         (c == '\r' ? ((*offset)++ - 1) : (*offset)++) -
+             cFlag->line_annotation);
+  cFlag->line_annotation = NULL;
+}
+
+FuncMap cFuncMap[] = {{'\'', single_quote_proc},
+                      {'\"', double_quote_proc},
+                      {'/', c_slash_proc},
+                      {'*', c_star_proc},
+                      {'\n', end_proc}};
+
+void remove_c_annotation(char *buf, size_t size) {
+  char *p = buf, *end = buf + size;
+  AnnotationFlag cFlag = {NULL, NULL, NULL, NULL};
+  size_t map_size = sizeof(cFuncMap) / sizeof(FuncMap);
   while (p < end) {
-    c = *p;
-    switch (c) {
-    case '\'':
-      if (double_quote || line_annotation || block_annotation) {
-        p++;
-        continue;
+    size_t i = 0;
+    for (; i < map_size; i++) {
+      if (*p == cFuncMap[i].char_val) {
+        cFuncMap[i].func(&p, &cFlag);
       }
-      if (single_quote == NULL) {
-        single_quote = p++;
-      } else {
-        len = p++ - single_quote;
-        if (len == 2 && *(single_quote + 1) == '\\') {
-          continue;
-        }
-        single_quote = NULL;
-      }
-      break;
-    case '\"':
-      if (single_quote || line_annotation || block_annotation) {
-        p++;
-        continue;
-      }
-      if (double_quote == NULL) {
-        double_quote = p++;
-      } else {
-        if (*(p++ - 1) == '\\') {
-          continue;
-        }
-        double_quote = NULL;
-      }
-      break;
-    case '-':
-      if (single_quote || double_quote || line_annotation || block_annotation) {
-        p++;
-        continue;
-      }
-      if (*(p + 1) == '-') {
-        if (*(p + 2) == '[' && *(p + 3) == '[') {
-          block_annotation = p;
-          p += 4;
-        } else {
-          line_annotation = p;
-          p = p + 2;
-        }
-      } else {
-        p++;
-      }
-      break;
-    case ']':
-      if (line_annotation) {
-        p++;
-        continue;
-      }
-      if (block_annotation && (*(p + 1) == ']')) {
-        p += 2;
-        memset(block_annotation, ' ', p - block_annotation);
-        block_annotation = NULL;
-      } else {
-        p++;
-      }
-      break;
-    case '\n':
-      if (line_annotation == NULL) {
-        p++;
-        continue;
-      }
-      c = *(p - 1);
-      memset(line_annotation, ' ',
-             (c == '\r' ? (p++ - 1) : p++) - line_annotation);
-      line_annotation = NULL;
-      break;
-    default:
+    }
+    if (i == map_size) {
       p++;
-      break;
     }
   }
-  if (line_annotation) {
-    memset(line_annotation, ' ', p - line_annotation);
+  if (cFlag.line_annotation) {
+    memset(cFlag.line_annotation, ' ', p - cFlag.line_annotation);
+  }
+}
+
+void sub_proc(char **offset, AnnotationFlag *flag) {
+  if (flag->single_quote || flag->double_quote || flag->line_annotation ||
+      flag->block_annotation) {
+    (*offset)++;
+    return;
+  }
+  if (*((*offset) + 1) == '-') {
+    if (*((*offset) + 2) == '[' && *((*offset) + 3) == '[') {
+      flag->block_annotation = (*offset);
+      (*offset) += 4;
+    } else {
+      flag->line_annotation = (*offset);
+      (*offset) = (*offset) + 2;
+    }
+  } else {
+    (*offset)++;
+  }
+}
+
+void close_bracket_proc(char **offset, AnnotationFlag *flag) {
+  if (flag->line_annotation) {
+    (*offset)++;
+    return;
+  }
+  if (flag->block_annotation && (*((*offset) + 1) == ']')) {
+    (*offset) += 2;
+    memset(flag->block_annotation, ' ', (*offset) - flag->block_annotation);
+    flag->block_annotation = NULL;
+  } else {
+    (*offset)++;
+  }
+}
+
+FuncMap luaFuncMap[] = {{'\'', single_quote_proc},
+                        {'\"', double_quote_proc},
+                        {'-', sub_proc},
+                        {']', close_bracket_proc},
+                        {'\n', end_proc}};
+
+void remove_lua_annotation(char *buf, size_t size) {
+  char *p = buf, *end = buf + size;
+  AnnotationFlag flag = {NULL, NULL, NULL, NULL};
+  size_t map_size = sizeof(luaFuncMap) / sizeof(FuncMap);
+  while (p < end) {
+    size_t i = 0;
+    for (; i < map_size; i++) {
+      if (*p == cFuncMap[i].char_val) {
+        cFuncMap[i].func(&p, &flag);
+      }
+    }
+    if (i == map_size) {
+      p++;
+    }
+  }
+  if (flag.line_annotation) {
+    memset(flag.line_annotation, ' ', p - flag.line_annotation);
   }
 }
 
