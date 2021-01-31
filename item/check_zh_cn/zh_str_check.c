@@ -25,7 +25,7 @@ typedef struct {
   char *single_quote, *double_quote, *line_annotation, *block_annotation;
 } AnnotationFlag;
 
-typedef int (*AnnoProcFunc)(char *offset, AnnotationFlag *cFlag);
+typedef int (*AnnoProcFunc)(char *, AnnotationFlag *);
 
 typedef struct {
   int char_val;
@@ -33,6 +33,16 @@ typedef struct {
 } FuncMap;
 
 // python struct define
+typedef struct {
+  char *single_quote, *double_quote, *line_annotation, *three_single_quote,
+      *three_double_quote;
+} PythonProcArgu;
+
+typedef int (*PyAnnoProcFunc)(char *, PythonProcArgu *);
+typedef struct {
+  int char_val;
+  AnnoProcFunc func;
+} PyFuncMap;
 
 int check_zh_cn(char str[], int len) {
   int i = 0;
@@ -271,89 +281,101 @@ static int isAssign(char *iter) {
   return *iter == '=' ? 1 : 0;
 }
 
+// python
+
+int py_single_quote_proc(char *offset, PythonProcArgu *flag) {
+  if (flag->line_annotation || flag->double_quote || flag->three_double_quote) {
+    return 1;
+  }
+  if (*(offset + 1) == '\'' && *(offset + 2) == '\'') {
+    if (flag->three_single_quote == NULL) {
+      flag->three_single_quote = offset;
+    } else {
+      if (!isAssign(flag->three_single_quote - 1)) {
+        memset(flag->three_single_quote, ' ',
+               offset + 3 - flag->three_single_quote);
+        flag->three_single_quote = NULL;
+      }
+      return 3;
+    }
+  }
+  if (flag->single_quote == NULL) {
+    flag->single_quote = offset;
+  } else {
+    if (*(offset - 1) != '\\') {
+      flag->single_quote = NULL;
+    }
+  }
+  return 1;
+}
+
+int single_double_quote_proc(char *offset, char **one_quote,
+                             char **three_quote) {
+  if (*(offset + 1) == *offset && *(offset + 2) == *offset) {
+    if (*three_quote == NULL) {
+      *three_quote = offset;
+    } else {
+      if (!isAssign(*three_quote - 1)) {
+        memset(*three_quote, ' ', offset + 3 - *three_quote);
+        *three_quote = NULL;
+      }
+      return 3;
+    }
+  }
+  if (*one_quote == NULL) {
+    *one_quote = offset++;
+  } else {
+    if (*(offset++ - 1) != '\\') {
+      *one_quote = NULL;
+    }
+  }
+  return 1;
+}
+
+int py_quote_proc(char *offset, PythonProcArgu *flag) {
+  if (*offset == '\"') {
+    if (flag->line_annotation || flag->single_quote ||
+        flag->three_single_quote) {
+      return 1;
+    }
+    return single_double_quote_proc(offset, &flag->double_quote,
+                                    &flag->three_double_quote);
+  } else if (*offset == '\'') {
+    if (flag->line_annotation || flag->double_quote ||
+        flag->three_double_quote) {
+      return 1;
+    }
+    return single_double_quote_proc(offset, &flag->single_quote,
+                                    &flag->three_single_quote);
+  }
+  return 1;
+}
+
 void remove_python_annotation(char *buf, size_t size) {
   char *p = buf, *end = buf + size, c;
   char *single_quote = 0, *double_quote = 0, *line_annotation = 0,
        *three_single_quote = 0, *three_double_quote = 0;
+  PythonProcArgu argu = {NULL, NULL, NULL, NULL, NULL};
 
   while (p < end) {
-    c = *p;
-    switch (c) {
-    case '\'':
-      if (line_annotation || double_quote || three_double_quote) {
+    if (*p == '\'' || *p == '\"') {
+      p += py_quote_proc(p, &argu);
+    } else if (*p == '#') {
+      if (single_quote || double_quote || three_single_quote ||
+          three_double_quote || line_annotation) {
         p++;
-        continue;
       }
-      if (*(p + 1) == '\'' && *(p + 2) == '\'') {
-        if (three_single_quote == NULL) {
-          three_single_quote = p;
-        } else {
-          p += 3;
-          if (isAssign(three_single_quote - 1)) {
-            continue;
-          } else {
-            memset(three_single_quote, ' ', p - three_single_quote);
-            three_single_quote = NULL;
-          }
-        }
-      }
-      if (single_quote == NULL) {
-        single_quote = p++;
-      } else {
-        if (*(p++ - 1) == '\\') {
-          continue;
-        }
-        single_quote = NULL;
-      }
-      break;
-    case '\"':
-      if (line_annotation || single_quote || three_single_quote) {
-        p++;
-        continue;
-      }
-      if (*(p + 1) == '\"' && *(p + 2) == '\"') {
-        if (three_double_quote == NULL) {
-          three_double_quote = p;
-        } else {
-          p += 3;
-          if (isAssign(three_double_quote - 1)) {
-            continue;
-          } else {
-            memset(three_double_quote, ' ', p - three_double_quote);
-            three_double_quote = NULL;
-          }
-        }
-      }
-      if (double_quote == NULL) {
-        double_quote = p++;
-      } else {
-        if (*(p++ - 1) == '\\') {
-          continue;
-        }
-        double_quote = NULL;
-      }
-      break;
-    case '#':
-      if (single_quote || double_quote || line_annotation ||
-          three_single_quote || three_double_quote) {
-        p++;
-        continue;
-      }
-      line_annotation = p;
-      break;
-    case '\n':
+      line_annotation = p++;
+    } else if (*p == '\n') {
       if (line_annotation == NULL) {
         p++;
-        continue;
       }
       c = *(p - 1);
       memset(line_annotation, ' ',
              (c == '\r' ? (p++ - 1) : p++) - line_annotation);
       line_annotation = NULL;
-      break;
-    default:
+    } else {
       p++;
-      break;
     }
   }
   if (line_annotation) {
