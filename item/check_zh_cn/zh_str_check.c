@@ -181,19 +181,29 @@ FuncMap cFuncMap[] = {{'\'', single_quote_proc},
                       {'*', c_star_proc},
                       {'\n', end_proc}};
 
-void remove_c_annotation(char *buf, size_t size) {
-  char *p = buf, *end = buf + size;
-  AnnotationFlag cFlag = {NULL, NULL, NULL, NULL};
-  size_t map_size = sizeof(cFuncMap) / sizeof(FuncMap);
-  while (p < end) {
-    for (size_t i = 0; i < map_size; i++) {
-      if (*p == cFuncMap[i].char_val) {
-        p += cFuncMap[i].func(p, &cFlag);
-      }
+AnnoProcFunc find_proc_func(int ch, FuncMap funcMap[], size_t len) {
+  size_t map_size = len / sizeof(FuncMap);
+  for (size_t i = 0; i < map_size; i++) {
+    if (ch == funcMap[i].char_val) {
+      return funcMap[i].func;
     }
   }
-  if (cFlag.line_annotation) {
-    memset(cFlag.line_annotation, ' ', p - cFlag.line_annotation);
+  return NULL;
+}
+void remove_c_annotation(char *buf, size_t size) {
+  char *p = buf, *end = buf + size;
+  AnnotationFlag flag = {NULL, NULL, NULL, NULL};
+  AnnoProcFunc proc_func = NULL;
+  while (p < end) {
+    proc_func = find_proc_func(*p, cFuncMap, sizeof(cFuncMap));
+    if (proc_func) {
+      p += proc_func(p, &flag);
+    } else {
+      p++;
+    }
+  }
+  if (flag.line_annotation) {
+    memset(flag.line_annotation, ' ', p - flag.line_annotation);
   }
 }
 
@@ -235,17 +245,12 @@ FuncMap luaFuncMap[] = {{'\'', single_quote_proc},
 void remove_lua_annotation(char *buf, size_t size) {
   char *p = buf, *end = buf + size;
   AnnotationFlag flag = {NULL, NULL, NULL, NULL};
-  size_t map_size = sizeof(luaFuncMap) / sizeof(FuncMap);
-  int is_comm_char = 1;
+  AnnoProcFunc proc_func = NULL;
   while (p < end) {
-    size_t i = 0;
-    for (; i < map_size; i++) {
-      if (*p == cFuncMap[i].char_val) {
-        cFuncMap[i].func(p, &flag);
-        is_comm_char = 0;
-      }
-    }
-    if (is_comm_char) {
+    proc_func = find_proc_func(*p, luaFuncMap, sizeof(luaFuncMap));
+    if (proc_func) {
+      p += proc_func(p, &flag);
+    } else {
       p++;
     }
   }
