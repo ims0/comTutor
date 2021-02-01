@@ -15,9 +15,9 @@ if [ ! -d $1 ];then
 fi
 
 if [[ $* =~ "debug" ]];then
-    debug_flag="-DDEBUG -g3"
+    options="-DDEBUG -g3"
 else
-    debug_flag="-O2"
+    options="-O2"
 fi
 
 exe_name=check_exe
@@ -29,7 +29,7 @@ cat /dev/null >$logfile
 
 # compile file
 set -x
-gcc $debug_flag -std=c99 $curr_path/$src_file -o $exe_file
+gcc $options -std=c99 $curr_path/$src_file -o $exe_file
 set +x
 
 function callExeCheck(){
@@ -72,7 +72,7 @@ function check(){
 $exe_file  $curr_path/test_file_dir/en.c cpp
 if [[ $? != 0 ]];then
     echo "unit test c language en fail"
-    exit 2
+    exit 1
 fi
 $exe_file  $curr_path/test_file_dir/zh.c cpp > /dev/null
 if [[ $? == 0 ]];then
@@ -84,24 +84,24 @@ fi
 $exe_file  $curr_path/test_file_dir/en.lua lua
 if [[ $? != 0 ]];then
     echo "unit test lua language en fail"
-    exit 2
+    exit 3
 fi
 $exe_file  $curr_path/test_file_dir/zh.lua lua > /dev/null
 if [[ $? == 0 ]];then
     echo "unit test lua language zh fail"
-    exit 2
+    exit 4
 fi
 
 #python language
 $exe_file  $curr_path/test_file_dir/en.py python
 if [[ $? != 0 ]];then
     echo "unit test python language en fail"
-    exit 2
+    exit 5
 fi
 $exe_file  $curr_path/test_file_dir/zh.py python > /dev/null
 if [[ $? == 0 ]];then
     echo "unit test python language zh fail"
-    exit 2
+    exit 6
 fi
 
 echo "======= unit test succ ======="
