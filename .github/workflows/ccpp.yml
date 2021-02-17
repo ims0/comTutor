@@ -1,23 +1,23 @@
 name: C/C++ CI
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
+on: push
 jobs:
-  build:
-
+  my_first_job:
+    name: My first job
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: configure
-      run: ./AutoTools/AutoconfDemo/configure
-    - name: make
-      run: cd ./AutoTools/AutoconfDemo/;make
-    - name: make check
-      run: cd ./AutoTools/AutoconfDemo/;make check
-    - name: make distcheck
-      run: cd ./AutoTools/AutoconfDemo/;make distcheck
+    - name: checkout
+      uses: actions/checkout@master
+    - name: Run a single-line script
+      run: echo "Hello World!"
+  my_second_job:
+    name: My second job
+    runs-on: macos-latest
+    steps:
+    - name: Run a multi-line script
+      env:
+        MY_VAR: Hello World!
+        MY_NAME: P3TERX
+      run: |
+        echo $MY_VAR
+        echo My name is $MY_NAME
