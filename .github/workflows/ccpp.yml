@@ -21,3 +21,4 @@ jobs:
       run: cd ./AutoTools/AutoconfDemo/;make check
     - name: make distcheck
       run: cd ./AutoTools/AutoconfDemo/;make distcheck
+
