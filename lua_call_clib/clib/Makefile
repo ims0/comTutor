@@ -2,10 +2,12 @@ $(warning A top-level warning)
 CC = gcc
 CFLAGS := -Wall -fPIC
 
+LUA_VERSION=lua5.1
+COMPILE_MACRO=-DLUA_LOW_VER
 LIB = mylib.so
 OBJS = clib.o
-LUA_LIB = -llua5.2 -ldl
-LUA_INC_ROOT = /usr/include/lua5.2
+LUA_LIB = -l$(LUA_VERSION) -ldl
+LUA_INC_ROOT = /usr/include/$(LUA_VERSION)
 
 INCLUDE_PATH = -I$(LUA_INC_ROOT)
 
@@ -18,7 +20,7 @@ $(LIB) : $(OBJS)
 
 %.o : %.c
 	@echo dep:$< obj:$@
-	$(CC) $(CFLAGS) -c $< -o $@ $(INCLUDE_PATH) 
+	$(CC) $(CFLAGS) -c $< -o $@ $(INCLUDE_PATH) $(COMPILE_MACRO)
 
 clean:
 	rm -f $(OBJS) $(LIB)
