@@ -20,12 +20,67 @@ static int l_sin(lua_State *L)
 	 */
 	return 1; /* number of results */
 }
+
+int func_return_table(lua_State *L)
+{
+	lua_newtable(L);//创建一个表格，放在栈顶
+	lua_pushstring(L, "mydata");//压入key
+	lua_pushnumber(L,66);//压入value
+	lua_settable(L,-3);//弹出key,value，并设置到table里面去
+
+	lua_pushstring(L, "subdata");//压入key
+	lua_newtable(L);//压入value,也是一个table
+	lua_pushstring(L, "mydata");//压入subtable的key
+	lua_pushnumber(L,53);//value
+	lua_settable(L,-3);//弹出key,value,并设置到subtable
+
+	lua_settable(L,-3);//这时候父table的位置还是-3,弹出key,value(subtable),并设置到table里去
+	lua_pushstring(L, "mydata2");//同上
+	lua_pushnumber(L,77);
+	lua_settable(L,-3);
+	return 1;//堆栈里现在就一个table.其他都被弹掉了。
+}
+int return_table(lua_State *L)
+{
+	lua_newtable(L);//创建一个表格，放在栈顶
+	lua_pushnumber(L, 1);//压入key
+	lua_pushnumber(L,66);//压入value
+	lua_settable(L,-3);//弹出key,value，并设置到table里面去
+
+
+	lua_pushnumber(L, 2);//同上
+	lua_pushnumber(L,77);
+	lua_settable(L,-3);
+	return 1;//堆栈里现在就一个table.其他都被弹掉了。
+}
+int numindex_subtable(lua_State *L)
+{
+	lua_newtable(L);//创建一个表格，放在栈顶
+	lua_pushnumber(L, 1);//压入key
+	lua_newtable(L);//压入value,也是一个table
+	lua_pushstring(L, "sub1");//压入subtable的key
+	lua_pushnumber(L,10);//value
+	lua_settable(L,-3);//弹出key,value,并设置到subtable
+	lua_settable(L,-3);//这时候父table的位置还是-3,弹出key,value(subtable),并设置到table里去
+
+	lua_pushnumber(L, 2);//压入key
+	lua_newtable(L);//压入value,也是一个table
+	lua_pushstring(L, "sub2");//压入subtable的key
+	lua_pushnumber(L,20);//value
+	lua_settable(L,-3);//弹出key,value,并设置到subtable
+	lua_settable(L,-3);//这时候父table的位置还是-3,弹出key,value(subtable),并设置到table里去
+	
+	return 1;//堆栈里现在就一个table.其他都被弹掉了。
+}
 /* 需要一个"luaL_Reg"类型的结构体，其中每一个元素对应一个提供给Lua的函数。
  * 每一个元素中包含此函数在Lua中的名字，以及该函数在C库中的函数指针。
  * 最后一个元素为“哨兵元素”（两个"NULL"），用于告诉Lua没有其他的函数需要注册。
  */
 static const struct luaL_Reg mylib[] = {
 	{"mysin", l_sin},
+	{"func_return_table", func_return_table},
+	{"return_table", return_table},
+	{"numindex_subtable", numindex_subtable},
 	{NULL, NULL}
 };
 /* 此函数为C库中的“特殊函数”。
