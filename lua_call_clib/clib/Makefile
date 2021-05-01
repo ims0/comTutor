@@ -1,11 +1,17 @@
-$(warning A top-level warning)
 CC = gcc
 CFLAGS := -Wall -fPIC
 
-LUA_VERSION=lua5.1
-COMPILE_MACRO=-DLUA_LOW_VER
 LIB = mylib.so
 OBJS = clib.o
+
+luaver := `lua -v| awk '{print $$2}'`
+luaver_num := $(shell a=$(luaver);echo $${a%.*})
+LUA_VERSION:=lua$(luaver_num)
+
+$(info current lua version:$(LUA_VERSION))
+ifeq ($(LUA_VERSION),lua5.1)
+	COMPILE_MACRO= -DLUA_LOW_VER
+endif
 LUA_LIB = -l$(LUA_VERSION) -ldl
 LUA_INC_ROOT = /usr/include/$(LUA_VERSION)
 
@@ -25,4 +31,4 @@ $(LIB) : $(OBJS)
 clean:
 	rm -f $(OBJS) $(LIB)
 
-
+.PHONY: clean
