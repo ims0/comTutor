@@ -1,0 +1,16 @@
+[
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-Wall",
+            "-fPIC",
+            "-I/usr/include/lua5.2",
+            "-o",
+            "clib.o",
+            "clib.c"
+        ],
+        "directory": "/mnt/d/share-host-dir/comTutor/lua_call_clib/clib",
+        "file": "clib.c"
+    }
+]

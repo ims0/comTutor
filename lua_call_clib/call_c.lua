@@ -5,35 +5,28 @@ package.cpath = 'clib/?.so;'
 -- 这里"require"的参数对应C库中"luaopen_mylib()"中的"mylib"。
 local mylib = require "mylib"
 
-print(mylib.mysin(3.14 / 2))
-
-tb=mylib.func_return_table()
-print(type(tb))
-
-print(unpack(tb))
-for k,v in pairs(tb) do
-	print (k)
-	print (v)
-end
-
-tb=mylib.return_table()
-print(type(tb))
-
-print(unpack(tb))
-for k,v in pairs(tb) do
-	print (k)
-	print (v)
-end
-
-print ("numindex_subtable")
-tb=mylib.numindex_subtable()
-print(type(tb))
-
-print(unpack(tb))
-for k,v in pairs(tb) do
-	print (k)
-	for sk,sv in pairs(v) do
-		print (sk)
-		print (sv)
+function print_tb(tb)
+	print(unpack(tb))
+	for k,v in pairs(tb) do
+		if type(v) == type({}) then
+			print ("table index:"..k)
+			for sk,sv in pairs(v) do
+				print ("map:"..sk.."->"..sv)
+			end
+		else
+			print ("map:"..k.."->"..v)
+	
+		end
 	end
 end
+
+print ("---- numindex_subtable------")
+tb=mylib.numindex_subtable(3,5)
+print_tb(tb)
+
+print ("---- get table------")
+
+local tb = {"hello", "world", "end"}
+local newtable, index, element = mylib.get_tb(tb, 2)
+
+print(" newtable:",newtable,"element:",index)
