@@ -76,7 +76,8 @@ int numindex_subtable(lua_State *L)
 static int get_tb(lua_State *L)
 {
 	luaL_checktype(L, 1, LUA_TTABLE);
-	size_t tb_len = luaL_len(L, 1);
+	//luaL_getn 2 lua_objlen 2 lua_rawlen;luaL_len
+	size_t tb_len = lua_objlen(L, 1);
 	int pos = luaL_checknumber(L, 2);
 	printf("table item num:%zu,arg2: pos = %d\n",tb_len, pos);
 
@@ -98,6 +99,34 @@ static int get_tb(lua_State *L)
 	}
 	return 1;  //这是是返回个数
 }
+static int set_sess(lua_State *L)
+{
+    if (!lua_istable(L, 2)) {
+        luaL_error(L, "ini:setSess expect a table");
+    }
+    const char* field = luaL_checkstring(L, 1);
+	printf("field :%s\n", field);
+	printf("the number of elements in the stack = %d\n",  lua_gettop(L));
+    lua_pushnil(L);
+	printf("the number of elements in the stack = %d\n",  lua_gettop(L));
+    while (lua_next(L, -2)) {
+        const char *key, *value;
+        lua_pushvalue(L, -2);
+        key = lua_tolstring(L, -1, NULL);
+        value = lua_tolstring(L, -2, NULL);
+        if (key && value) {
+			printf("k:%s,v:%s\n", key,value);
+        }
+
+        lua_pop(L, 2);
+    }
+	//lua_settop(L, 0);
+	//lua_remove(L, 1);
+	lua_pop(L, 1);
+    lua_pushnumber(L,2);
+	printf("the number of elements in the stack = %d\n",  lua_gettop(L));
+	return 1;  //这是是返回个数
+}
 /* 需要一个"luaL_Reg"类型的结构体，其中每一个元素对应一个提供给Lua的函数。
  * 每一个元素中包含此函数在Lua中的名字，以及该函数在C库中的函数指针。
  * 最后一个元素为“哨兵元素”（两个"NULL"），用于告诉Lua没有其他的函数需要注册。
@@ -107,6 +136,7 @@ static const struct luaL_Reg mylib[] = {
 	{"func_return_table", func_return_table},
 	{"numindex_subtable", numindex_subtable},
 	{"get_tb", get_tb},
+	{"set_sess", set_sess},
 	{NULL, NULL}
 };
 /* 此函数为C库中的“特殊函数”。

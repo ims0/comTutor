@@ -4,7 +4,7 @@ CFLAGS := -Wall -fPIC
 LIB = mylib.so
 OBJS = clib.o
 
-luaver := `lua -v| awk '{print $$2}'`
+luaver := `lua -v 2>&1| awk '{print $$2}'`
 luaver_num := $(shell a=$(luaver);echo $${a%.*})
 LUA_VERSION:=lua$(luaver_num)
 
@@ -20,6 +20,7 @@ INCLUDE_PATH = -I$(LUA_INC_ROOT)
 all : $(LIB)
 	rm -f $(OBJS)
 	ls
+	@echo "'baer make' produce compile_commands.json"
 
 $(LIB) : $(OBJS)
 	$(CC) -shared -o $@ $(OBJS) $(LUA_LIB)

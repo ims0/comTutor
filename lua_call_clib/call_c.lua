@@ -30,3 +30,9 @@ local tb = {"hello", "world", "end"}
 local newtable, index, element = mylib.get_tb(tb, 2)
 
 print(" newtable:",newtable,"element:",index)
+
+print ("---- set  sess ------")
+
+local rt1, rt2, rt3 = mylib.set_sess("filed", tb)
+
+print("rt1:",rt1,"rt2:",rt2,"rt3:",rt3)
