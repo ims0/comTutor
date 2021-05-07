@@ -77,7 +77,14 @@ static int get_tb(lua_State *L)
 {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	//luaL_getn 2 lua_objlen 2 lua_rawlen;luaL_len
+	//5.0->5.1->5.2
+
+#ifdef  LUA_LOW_VER
 	size_t tb_len = lua_objlen(L, 1);
+#else
+	size_t tb_len = lua_rawlen(L, 1);
+#endif
+
 	int pos = luaL_checknumber(L, 2);
 	printf("table item num:%zu,arg2: pos = %d\n",tb_len, pos);
 

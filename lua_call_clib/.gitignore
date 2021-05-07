@@ -1,2 +1,5 @@
+*.so
+*.o
 .cache/
-compile_commands.json
+.clangd/
+*compile_commands.json
