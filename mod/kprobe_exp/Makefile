@@ -1,7 +1,6 @@
 #ifneq 括号内不能有空格 
 ifneq ($(KERNELRELEASE),)
-	obj-m := module.o
-	module-objs := hello.o f.o
+	obj-m := kprobe.o
 	br:= first
 else
 	KERNEL_DIR ?= /usr/src/kernels/$(shell uname -r)
