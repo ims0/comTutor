@@ -6,16 +6,18 @@ package.cpath = 'clib/?.so;'
 local mylib = require "mylib"
 
 function print_tb(tb)
-	print(unpack(tb))
-	for k,v in pairs(tb) do
-		if type(v) == type({}) then
-			print ("table index:"..k)
-			for sk,sv in pairs(v) do
-				print ("map:"..sk.."->"..sv)
+	if type(v) == type({}) then
+		print(unpack(tb))
+		for k,v in pairs(tb) do
+			if type(v) == type({}) then
+				print ("table index:"..k)
+				for sk,sv in pairs(v) do
+					print ("map:"..sk.."->"..sv)
+				end
+			else
+				print ("map:"..k.."->"..v)
+		
 			end
-		else
-			print ("map:"..k.."->"..v)
-	
 		end
 	end
 end
