@@ -56,6 +56,15 @@ NEED MODIFY
 2. modify in Make.defines
 CFLAGS = -g -O2 -D_GNU_SOURCE -D__USE_GNU -D_REENTRANT -Wall
 
+3.define	POSIX_IPC_PREFIX  "/" in "config.h" 
+posix name start with "/" and only include one "/"
+```
+#ifdef	POSIX_IPC_PREFIX
+		dir = POSIX_IPC_PREFIX;		/* from "config.h" */
+#else
+		dir = "/tmp/";				/* default */
+#endif
+```
 ===========
 
 MORE DETAILS
