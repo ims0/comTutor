@@ -1,14 +1,14 @@
 #ifneq 括号内不能有空格 
 ifneq ($(KERNELRELEASE),)
-	obj-m := hellomod.o
-	hellomod-objs := hello.o f.o
+	obj-m := netf.o
+	netf-objs := netfilter.o 
 	br:= first
 else
 	KERNEL_DIR ?= /usr/src/kernels/$(shell uname -r)
 	PWD := $(shell pwd)
 	br:= second
 endif
-
+CFLAGS := -std=C99
 
 default:
 	@echo $(br)
