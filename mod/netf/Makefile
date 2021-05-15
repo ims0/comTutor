@@ -4,7 +4,7 @@ ifneq ($(KERNELRELEASE),)
 	netf-objs := netfilter.o 
 	br:= first
 else
-	KERNEL_DIR ?= /usr/src/kernels/$(shell uname -r)
+	KERNEL_DIR ?= /lib/modules/$(shell uname -r)/build
 	PWD := $(shell pwd)
 	br:= second
 endif
