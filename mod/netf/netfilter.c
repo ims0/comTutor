@@ -1,5 +1,4 @@
-/*********************************************************
- *
+/**********************************************************
  > File Name: hello.c
  > Author: ims
  > Created Time: Fri Apr  9 19:15:35 2021
@@ -12,6 +11,7 @@
 #include <uapi/linux/netfilter_ipv4.h>
 #include <uapi/linux/netfilter.h>
 #include <net/net_namespace.h>
+#include <linux/ip.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Hcamal");
@@ -35,15 +35,48 @@ MODULE_AUTHOR("Hcamal");
 //183:int nf_register_net_hook(struct net *net, const struct nf_hook_ops *ops);
 //184:void nf_unregister_net_hook(struct net *net, const struct nf_hook_ops *ops);
 
-struct net net_obj={0};
 typedef struct{
     int a;
     int b;
 }st;
-
+static struct net net_init;
+/* IP地址转字符串 */
+static void IP2Str(char *ipaddr, int size, uint32_t ip)  
+{  
+    snprintf(ipaddr, size, "%d.%d.%d.%d", ( ip >> 24 ) & 0xff  
+                                        , ( ip >> 16 ) & 0xff  
+                                        , ( ip >> 8 ) & 0xff  
+                                        , ip & 0xff);
+    return;
+} 
+const char *src_ip="172.29.192.1";
 unsigned int my_nf_hookfn(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
-    return 0;
+    struct iphdr *pstIpHdr = NULL;
+    char szIpstr[20] = {0};
+
+    printk(KERN_INFO "Recv packet \n");   /* printk打印 */
+    if (unlikely(NULL == skb))
+    {
+        return NF_ACCEPT;
+    }
+    pstIpHdr = ip_hdr(skb);
+    if (unlikely(NULL == pstIpHdr))
+    {
+        return NF_ACCEPT;
+    }
+    if (pstIpHdr->protocol != IPPROTO_ICMP)
+    {
+        return NF_ACCEPT;
+    }
+    /* 网络序转主机序，然后转成字符串 */
+    IP2Str(szIpstr, sizeof(szIpstr), ntohl(pstIpHdr->saddr));
+    if (0 == strcmp(szIpstr, src_ip))   /* 字符串比较 */
+    {
+        printk(KERN_INFO "Recv icmp packet from %s\n", src_ip);   /* printk打印 */
+    }
+
+    return NF_ACCEPT;
 }
 
 static struct nf_hook_ops hook_ops ={
@@ -57,7 +90,7 @@ int hello_init(void)
 {
     int ret = 0;
     printk(KERN_INFO "Hello World \n");
-    ret = nf_register_net_hook(&net_obj, &hook_ops);
+    ret = nf_register_net_hook(&net_init, &hook_ops);
     if (0 != ret)
     {
         printk(KERN_WARNING "nf_register_net_hook failed,ret%d\n", ret);
@@ -70,7 +103,7 @@ int hello_init(void)
 void hello_exit(void)
 {
     printk(KERN_INFO "Goodbye World\n");
-    nf_unregister_net_hook(&net_obj, &hook_ops);
+    nf_unregister_net_hook(&net_init, &hook_ops);
 }
 
 module_init(hello_init);
