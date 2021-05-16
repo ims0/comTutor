@@ -29,8 +29,9 @@ module_param(irq,int,0660);
  
 static int mode=1;
 module_param(mode,int,0660);
- 
-static struct proc_dir_entry *ent;
+
+const char *file_name = "mydev";
+static struct proc_dir_entry *entry;
  
 static ssize_t mywrite(struct file *file, const char __user *ubuf, size_t count, loff_t *ppos) 
 {
@@ -74,15 +75,15 @@ static struct file_operations myops =
  
 static int simple_init(void)
 {
-    ent=proc_create("mydev",0660,NULL,&myops);
-    printk(KERN_ALERT "hello...\n");
+    entry=proc_create(file_name, 0660, NULL, &myops);
+    printk(KERN_ALERT "hello, create /proc/%s\n", file_name);
     return 0;
 }
  
 static void simple_cleanup(void)
 {
-    proc_remove(ent);
-    printk(KERN_WARNING "bye ...\n");
+    proc_remove(entry);
+    printk(KERN_WARNING "bye, remove /proc/%s\n", file_name);
 }
  
 module_init(simple_init);

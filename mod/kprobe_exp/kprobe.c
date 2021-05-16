@@ -13,13 +13,28 @@ static int handler_pre(struct kprobe *p, struct pt_regs *regs)
         total_count++;
         //printk 打印的日志 可以通过dmesg 命令查看
         printk(KERN_INFO "累计调用do_fork[%d]次\n",total_count);
+#ifdef CONFIG_X86
+    printk(KERN_INFO "pre_handler: p->addr = 0x%p, ip = %lx, flags = 0x%lx\n",
+        p->addr, regs->ip, regs->flags);
+#endif
+#ifdef CONFIG_PPC
+    printk(KERN_INFO "pre_handler: p->addr = 0x%p, nip = 0x%lx, msr = 0x%lx\n",
+        p->addr, regs->nip, regs->msr);
+#endif
+#ifdef CONFIG_MIPS
+    printk(KERN_INFO "pre_handler: p->addr = 0x%p, epc = 0x%lx, status = 0x%lx\n",
+        p->addr, regs->cp0_epc, regs->cp0_status);
+#endif
+#ifdef CONFIG_TILEGX
+    printk(KERN_INFO "pre_handler: p->addr = 0x%p, pc = 0x%lx, ex1 = 0x%lx\n",
+        p->addr, regs->pc, regs->ex1);
+#endif
         return 0;
 }
 
 
 //后置方法，这里可以拿到方法返回值
-static void handler_post(struct kprobe *p, struct pt_regs *regs,
-                                unsigned long flags)
+static void handler_post(struct kprobe *p, struct pt_regs *regs, unsigned long flags)
 {
 }
 //方法执行失败的回调函数
@@ -28,9 +43,10 @@ static int handler_fault(struct kprobe *p, struct pt_regs *regs, int trapnr)
         printk(KERN_INFO "fault_handler: p->addr = 0x%p, trap #%dn",p->addr, trapnr);
         return 0;
 }
+//查看可以探测的函数： sudo cat /proc/kallsyms | grep do_fork
 //通过kprobe这个数据结构，定义要hook的内核方法名称
 static struct kprobe kp = {
-        .symbol_name    = "do_fork",
+        .symbol_name    = "_do_fork",
 };
 //通过register_kprobe 方法更改内核对应方法的指令
 static int kprobe_init(void){

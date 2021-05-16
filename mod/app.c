@@ -10,14 +10,22 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-void main(void)
+const char*file_path = "/proc/mydev";
+
+int main(void)
 {
     char buf[100];
-    int fd = open("/proc/mydev", O_RDWR);
+    int fd = open(file_path, O_RDWR);
+    if(fd <0){
+        printf("open:%s fail\n", file_path);
+        return fd;
+    }
+    printf("fd:%d\n", fd);
+
     read(fd, buf, 100);
     printf("%s\n", buf);
 
-    lseek(fd, 0 , SEEK_SET);
+    lseek(fd, 0 , SEEK_SET);//The file offset is set to offset bytes
     write(fd, "33 4", 5);
 
     lseek(fd, 0 , SEEK_SET);
