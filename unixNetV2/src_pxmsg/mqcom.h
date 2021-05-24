@@ -7,7 +7,7 @@
 #ifndef MQCOM_H
 #define MQCOM_H
 
-#define MQ_PATH "/mq.8"
+#define MQ_PATH "/mq.7"
 #define MAX_MSG_SIZE 100
 #define MAX_MSG_NUM 2
  

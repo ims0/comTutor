@@ -5,18 +5,35 @@
 
 CC = gcc
 CFLAGS = -g -O2 -D_REENTRANT -Wall
-LIBS = -lrt -lpthread 
+LDFLAGS = -lrt -lpthread 
+INCLUDEFLAGS =
 IN_FILE=mqcom.h
 
-PROGS = mqsend mqrcv
+PROGS = mqsend mqrcv mqnotify
 
+.PHONY:all clean
 all:${PROGS}
 
-mqsend:mqsend.o $(IN_FILE)
-	${CC} ${CFLAGS} $^ -o $@ ${LIBS}
+mqsend:mqsend.o 
+	${CC} -o $@ $^ ${LDFLAGS}
 
-mqrcv:mqrcv.o $(IN_FILE)
-	${CC} ${CFLAGS} $^ -o $@ ${LIBS}
+mqrcv:mqrcv.o 
+	${CC} -o $@ $^ ${LDFLAGS}
+
+mqnotify:mqnotify.o 
+	${CC} -o $@ $^ ${LDFLAGS}
+
+%.o:%.c $(IN_FILE)
+	$(CC) -o $@ -c $< $(CFLAGS) $(INCLUDEFLAGS)
+
+%.d : %.c
+	@set -e; \
+	gcc -MM $@ > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+-include seq.d
+#https://segmentfault.com/a/1190000000349917
 
 clean:
 	rm -f ${PROGS} ${CLEANFILES} *.o
