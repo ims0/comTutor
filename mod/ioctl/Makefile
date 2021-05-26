@@ -1,7 +1,7 @@
 #ifneq 括号内不能有空格 
 ifneq ($(KERNELRELEASE),)
-	obj-m := proc_m.o
-	proc_m-objs := proc_mod.o
+	obj-m := ioctl.o
+	ioctl-objs := mod.o
 else
 	KERNEL_DIR ?= /lib/modules/$(shell uname -r)/build
 	PWD := $(shell pwd)
@@ -14,7 +14,6 @@ all:test
 
 test:test.o 
 	${CC} -o $@ $^ ${LDFLAGS}
-
 
 clean:
 	rm -rf *.o *~ core .depend .*.cmd *.ko *.mod.c *.mod *.order *.tmp_versions *.symvers test
