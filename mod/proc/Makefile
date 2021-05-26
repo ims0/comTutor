@@ -1,18 +1,21 @@
 #ifneq 括号内不能有空格 
 ifneq ($(KERNELRELEASE),)
+	@echo KERNEL_RELEASE:$(KERNELRELEASE)
+	@echo obj:$(obj)
 	obj-m := proc_m.o
 	proc_m-objs := proc_mod.o
-	br:= first
 else
 	KERNEL_DIR ?= /lib/modules/$(shell uname -r)/build
 	PWD := $(shell pwd)
-	br:= second
 endif
 
 
-default:
-	@echo $(br)
-	@echo KERNELRELEASE:$(KERNELRELEASE)
+proc:
+	objs :=proc
+	@echo KERNEL_DIR:$(KERNEL_DIR)
+	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
+ioctl:
+	objs :=ioctl
 	@echo KERNEL_DIR:$(KERNEL_DIR)
 	$(MAKE) -C $(KERNEL_DIR) M=$(PWD) modules
 

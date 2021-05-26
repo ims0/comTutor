@@ -37,7 +37,6 @@ int main(void)
     }
     printf("ret:%d\n", ret);
 
-    /*
     struct miscdata getdata;
     if ((ret = ioctl(dev_fd, FELLOW_MISC_IOC_GET, &getdata)) < 0)
     {
@@ -48,7 +47,6 @@ int main(void)
     {
         printf("ioctl print fail:%s\n", strerror(errno));
     }
-    */
     close(dev_fd);
     return ret;
 
