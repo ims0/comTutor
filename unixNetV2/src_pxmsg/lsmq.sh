@@ -10,3 +10,6 @@ if [ ! -d /dev/mqueue ];then
 fi
 
 ls /dev/mqueue
+
+echo "default val"
+tail -n +1 /proc/sys/fs/mqueue/* | grep -v "^$"

@@ -9,7 +9,7 @@ LDFLAGS = -lrt -lpthread
 INCLUDEFLAGS =
 IN_FILE=mqcom.h
 
-PROGS = mqsend mqrcv mqnotify
+PROGS = mqsend mqrcv mqnotify mqsig
 
 .PHONY:all clean
 all:${PROGS}
@@ -21,6 +21,9 @@ mqrcv:mqrcv.o
 	${CC} -o $@ $^ ${LDFLAGS}
 
 mqnotify:mqnotify.o 
+	${CC} -o $@ $^ ${LDFLAGS}
+
+mqsig:mqsig.o 
 	${CC} -o $@ $^ ${LDFLAGS}
 
 %.o:%.c $(IN_FILE)
