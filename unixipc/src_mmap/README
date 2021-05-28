@@ -1,0 +1,7 @@
+
+mmap映射前，文件指针偏移量就是可以映射到内存的长度，可以  
+use write complish  offset or use lseek , tip: content can not empty, 
+mean for must call write fun before call mmap
+
+centos valid memory len equal file offset after process exit
+ubuntu valid memory len only equal mmap fun setting
