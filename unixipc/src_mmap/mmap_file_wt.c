@@ -16,7 +16,7 @@ int main(int argc,char **argv)//map a normal file as shared mem:
     people *p_map;
     char temp;
     fd = open(argv[1],O_CREAT|O_RDWR|O_TRUNC,00777);
-    lseek(fd, sizeof(people)*3, SEEK_SET);
+    lseek(fd, sizeof(people)*10 -1, SEEK_SET);
     write(fd,"",1);
     p_map=(people*)mmap(NULL,sizeof(people)*10,PROT_READ|PROT_WRITE,MAP_SHARED,fd,0);
     if (p_map == (void *)-1)

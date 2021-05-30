@@ -1,0 +1,51 @@
+[
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-g",
+            "-O2",
+            "-Wall",
+            "-D_XOPEN_SOURCE=500",
+            "-std=c99",
+            "-I./",
+            "-o",
+            "mmap_file_wt.o",
+            "mmap_file_wt.c"
+        ],
+        "directory": "/mnt/d/share-host-dir/com/unixipc/src_mmap",
+        "file": "mmap_file_wt.c"
+    },
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-g",
+            "-O2",
+            "-Wall",
+            "-D_XOPEN_SOURCE=500",
+            "-std=c99",
+            "-o",
+            "mmap_posix_wt",
+            "mmap_posix_wt.c"
+        ],
+        "directory": "/mnt/d/share-host-dir/com/unixipc/src_mmap",
+        "file": "mmap_posix_wt.c"
+    },
+    {
+        "arguments": [
+            "gcc",
+            "-c",
+            "-g",
+            "-O2",
+            "-Wall",
+            "-D_XOPEN_SOURCE=500",
+            "-std=c99",
+            "-o",
+            "mmap_file_rd",
+            "mmap_file_rd.c"
+        ],
+        "directory": "/mnt/d/share-host-dir/com/unixipc/src_mmap",
+        "file": "mmap_file_rd.c"
+    }
+]
