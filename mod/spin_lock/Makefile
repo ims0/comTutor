@@ -1,7 +1,7 @@
 #ifneq 括号内不能有空格 
 ifneq ($(KERNELRELEASE),)
-	obj-m := ioctl.o
-	ioctl-objs := mod.o
+	obj-m := spin.o
+	spin-objs := mod.o
 else
 	KERNEL_DIR ?= /lib/modules/$(shell uname -r)/build
 	PWD := $(shell pwd)

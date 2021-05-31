@@ -8,17 +8,19 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-main()
+#include <unistd.h>
+int main()
 {
     int fd;
     fd = open("/dev/test",O_RDWR);
     if(fd<0)
     {
         perror("open fail \n");
-        return;
+        return 1;
     }
     sleep(20);
     close(fd);
     printf("open ok \n ");
+    return 0;
 }
 
