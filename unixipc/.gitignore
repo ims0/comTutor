@@ -1,5 +1,4 @@
 Make.defines
-Makefile
 config.*
 *.o
 *.a
