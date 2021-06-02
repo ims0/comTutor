@@ -1,4 +1,5 @@
 cscope.*
 Makefile
 tags
-
+.cache
+compile_commands.json
