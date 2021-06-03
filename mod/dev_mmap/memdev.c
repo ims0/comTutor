@@ -90,13 +90,18 @@ static int memdev_init(void)
   int i;
 
   dev_t devno = MKDEV(mem_major, 0);
+  printk(KERN_INFO "mod arg mem_major:%d\n", mem_major);
 
   /* 静态申请设备号*/
   if (mem_major)
+  {
     result = register_chrdev_region(devno, 2, "memdev");
+    printk(KERN_INFO "mod static reg result:%d\n", result);
+  }
   else  /* 动态分配设备号 */
   {
     result = alloc_chrdev_region(&devno, 0, 2, "memdev");
+    printk(KERN_INFO "mod dynamic reg result:%d\n", result);
     mem_major = MAJOR(devno);
   }
 
@@ -109,10 +114,12 @@ static int memdev_init(void)
   cdev.ops = &mem_fops;
 
   /* 注册字符设备 */
-  cdev_add(&cdev, MKDEV(mem_major, 0), MEMDEV_NR_DEVS);
+  result = cdev_add(&cdev, devno, MEMDEV_NR_DEVS);
+  printk(KERN_INFO "mod cdev_add result:%d\n", result);
 
   /* 为设备描述结构分配内存*/
   mem_devp = kmalloc(MEMDEV_NR_DEVS * sizeof(struct mem_dev), GFP_KERNEL);
+
   if (!mem_devp)    /*申请失败*/
   {
     result =  - ENOMEM;
@@ -128,10 +135,12 @@ static int memdev_init(void)
         memset(mem_devp[i].data, 0, MEMDEV_SIZE);
   }
 
+  printk(KERN_INFO "mod init succ\n");
   return 0;
 
   fail_malloc:
   unregister_chrdev_region(devno, 1);
+  printk(KERN_INFO "mod init fail:%d\n", result);
 
   return result;
 }

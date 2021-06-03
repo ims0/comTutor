@@ -16,10 +16,15 @@ int main()
 
     /*打开文件*/
     fd = open("/dev/memdev0",O_RDWR);
+    if( fd < 0 )
+    {
+        puts("open fail");
+        return 1;
+    }
 
     buf = (char *)malloc(100);
     memset(buf, 0, 100);
-    start=mmap(NULL,100,PROT_READ|PROT_WRITE,MAP_SHARED,fd,0);
+    start= (char*)mmap(NULL,100,PROT_READ|PROT_WRITE,MAP_SHARED,fd,0);
 
     /* 读出数据 */
     strcpy(buf,start);
