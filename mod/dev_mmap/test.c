@@ -15,7 +15,7 @@ int main()
     char *buf;
 
     /*打开文件*/
-    fd = open("/dev/memdev0",O_RDWR);
+    fd = open("/dev/mydev",O_RDWR);
     if( fd < 0 )
     {
         puts("open fail");

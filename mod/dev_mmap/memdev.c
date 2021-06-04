@@ -28,6 +28,7 @@
 #endif
 #include <linux/kernel.h>
 #include "memdev.h"
+#define DEV_NAME "mydev"
 static int mem_major = MEMDEV_MAJOR;
 
 module_param(mem_major, int, S_IRUGO);
@@ -95,12 +96,12 @@ static int memdev_init(void)
   /* 静态申请设备号*/
   if (mem_major)
   {
-    result = register_chrdev_region(devno, 2, "memdev");
+    result = register_chrdev_region(devno, 2, DEV_NAME);
     printk(KERN_INFO "mod static reg result:%d\n", result);
   }
   else  /* 动态分配设备号 */
   {
-    result = alloc_chrdev_region(&devno, 0, 2, "memdev");
+    result = alloc_chrdev_region(&devno, 0, 2, DEV_NAME);
     printk(KERN_INFO "mod dynamic reg result:%d\n", result);
     mem_major = MAJOR(devno);
   }
@@ -116,6 +117,11 @@ static int memdev_init(void)
   /* 注册字符设备 */
   result = cdev_add(&cdev, devno, MEMDEV_NR_DEVS);
   printk(KERN_INFO "mod cdev_add result:%d\n", result);
+#ifdef CONFIG_DEVFS_FS //支持devfs文件系统，在内核里面配置
+  devfs_mk_cdev(devno, S_IFCHR | S_IRUGO | S_IWUSR, DEV_NAME)
+#endif
+ struct class * dev_class = class_create(THIS_MODULE, DEV_NAME);
+  device_create(dev_class, NULL, devno, NULL, DEV_NAME);
 
   /* 为设备描述结构分配内存*/
   mem_devp = kmalloc(MEMDEV_NR_DEVS * sizeof(struct mem_dev), GFP_KERNEL);
