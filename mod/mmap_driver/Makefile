@@ -1,7 +1,6 @@
 #ifneq 括号内不能有空格 
 ifneq ($(KERNELRELEASE),)
-	obj-m := dev_mmap_mod.o
-	dev_mmap_mod-objs := dev_mmap.o
+	obj-m := mmap_driver.o
 else
 	KERNEL_DIR ?= /lib/modules/$(shell uname -r)/build
 	PWD := $(shell pwd)

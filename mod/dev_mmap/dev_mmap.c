@@ -9,24 +9,24 @@
    -        entry->proc_fops = &ct_file_ops;
    +    entry = proc_create("sequence", 0, NULL, &ct_file_ops);
    */
-#include <asm/io.h>
-#include <asm/uaccess.h>
-#include <linux/cdev.h>
+#include <linux/init.h>
 #include <linux/errno.h>
 #include <linux/fs.h>
-#include <linux/init.h>
 #include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/types.h>
 #include <linux/version.h>
+#include <linux/cdev.h>
+#include <asm/io.h>
+#include <asm/uaccess.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(3, 3, 0)
 #include <asm/switch_to.h>
 #else
 #include <asm/system.h>
 #endif
-#include "memdev.h"
+#include "dev_mmap.h"
 #include <linux/kernel.h>
 #define DEV_NAME "mydev"
 static int mem_major = MEMDEV_MAJOR;
@@ -108,10 +108,13 @@ static int memdev_init(void) {
   /* 注册字符设备 */
   result = cdev_add(&cdev, devno, MEMDEV_NR_DEVS);
   printk(KERN_INFO "mod cdev_add result:%d\n", result);
+
 #ifdef CONFIG_DEVFS_FS //支持devfs文件系统，在内核里面配置
+  printk(KERN_INFO "has CONFIG_DEVFS_FS\n");
   devfs_mk_cdev(devno, S_IFCHR | S_IRUGO | S_IWUSR, DEV_NAME)
 #endif
-      struct class *dev_class = class_create(THIS_MODULE, DEV_NAME);
+
+  struct class *dev_class = class_create(THIS_MODULE, DEV_NAME);
   device_create(dev_class, NULL, devno, NULL, DEV_NAME);
 
   /* 为设备描述结构分配内存*/
