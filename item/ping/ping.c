@@ -1,9 +1,11 @@
 /*********************************************************
-    > File Name: main.cpp
-    > Author: ims
-    > Created Time: Tue 08 Jun 2021 11:39:30 PM CST
+  > File Name: main.cpp
+  > Author: ims
+  > Created Time: Tue 08 Jun 2021 11:39:30 PM CST
  *********************************************************/
 
+//for std=c11
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -15,59 +17,46 @@
 #include <sys/time.h>
 #include <string.h>
 #include <netdb.h>
-#include <pthread.h>
-
+#include <pthread.h>         
 
 #define PACKET_SEND_MAX_NUM 64
+#define ICMP_PACKET_HDR_LEN 8
+#define ICMP_PACKET_PACKET_LEN (ICMP_PACKET_HDR_LEN + sizeof(struct timeval))
 
-typedef struct ping_packet_status
-{
-    struct timeval begin_time;
-    struct timeval end_time;
-    int flag;   //发送标志,1为已发送
-    int seq;     //包的序列号
-}ping_packet_status;
-
-
-
-ping_packet_status ping_packet[PACKET_SEND_MAX_NUM];
 
 int alive;
-int rawsock;
+int pf_saw_icmp_socket;
 int send_count;
 int recv_count;
-pid_t pid;
-struct sockaddr_in dest;
 struct timeval start_time;
-struct timeval end_time;
-struct timeval time_interval;
 
 /*校验和算法*/
 unsigned short cal_chksum(unsigned short *addr,int len)
-{       int nleft=len;
-        int sum=0;
-        unsigned short *w=addr;
-        unsigned short answer=0;
+{       
+    int nleft=len;
+    int sum=0;
+    unsigned short *w=addr;
+    unsigned short answer=0;
 
-        /*把ICMP报头二进制数据以2字节为单位累加起来*/
-        while(nleft>1)
-        {
-            sum+=*w++;
-            nleft-=2;
-        }
-        /*若ICMP报头为奇数个字节，会剩下最后一字节。把最后一个字节视为一个2字节数据的高字节，这个2字节数据的低字节为0，继续累加*/
-        if( nleft==1)
-        {
-            *(unsigned char *)(&answer)=*(unsigned char *)w;
-            sum+=answer;
-        }
-        sum=(sum>>16)+(sum&0xffff);
-        sum+=(sum>>16);
-        answer=~sum;
-        return answer;
+    /*把ICMP报头二进制数据以2字节为单位累加起来*/
+    while(nleft>1)
+    {
+        sum+=*w++;
+        nleft-=2;
+    }
+    /*若ICMP报头为奇数个字节，会剩下最后一字节。把最后一个字节视为一个2字节数据的高字节，这个2字节数据的低字节为0，继续累加*/
+    if( nleft==1)
+    {
+        *(unsigned char *)(&answer)=*(unsigned char *)w;
+        sum+=answer;
+    }
+    sum=(sum>>16)+(sum&0xffff);
+    sum+=(sum>>16);
+    answer=~sum;
+    return answer;
 }
 
-struct timeval cal_time_offset(struct timeval begin, struct timeval end)
+long cal_time_offset(struct timeval begin, struct timeval end)
 {
     struct timeval ans;
     ans.tv_sec = end.tv_sec - begin.tv_sec;
@@ -77,44 +66,48 @@ struct timeval cal_time_offset(struct timeval begin, struct timeval end)
         ans.tv_sec--;
         ans.tv_usec+=1000000;
     }
-    return ans;
+    return ans.tv_sec*1000 + ans.tv_usec/1000; //毫秒为单位
 }
 
+/*类型|代码|校验和
+ *  标识符 |序号
+ * 可选数据
+ */
 void icmp_pack(struct icmp* icmphdr, int seq, int length)
 {
-    int i = 0;
 
     icmphdr->icmp_type = ICMP_ECHO;
     icmphdr->icmp_code = 0;
     icmphdr->icmp_cksum = 0;
-    icmphdr->icmp_seq = seq;
-    icmphdr->icmp_id = pid & 0xffff;
-    for(i=0;i<length;i++)
-    {
-        icmphdr->icmp_data[i] = i;
-    }
 
+    icmphdr->icmp_id = getpid() & 0xffff;
+    icmphdr->icmp_seq = seq;
+
+    /*
+       for(i=0;i<length;i++)
+       {
+       icmphdr->icmp_data[i] = i;
+       }
+       */
+
+    gettimeofday((struct timeval *)&icmphdr->icmp_data[0], NULL);
     icmphdr->icmp_cksum = cal_chksum((unsigned short*)icmphdr, length);
 }
 
 int icmp_unpack(char* buf, int len)
 {
-    int iphdr_len;
-    struct timeval begin_time, recv_time, offset_time;
-    int rtt;  //round trip time
-
     struct ip* ip_hdr = (struct ip *)buf;
-    iphdr_len = ip_hdr->ip_hl*4;
-    struct icmp* icmp = (struct icmp*)(buf+iphdr_len);
-    len-=iphdr_len;  //icmp包长度
-    if(len < 8)   //判断长度是否为ICMP包长度
+    int iphdr_len = ip_hdr->ip_hl*4;
+    int icmp_len = len - iphdr_len;  //icmp包长度
+    if(icmp_len < ICMP_PACKET_HDR_LEN)   //判断长度是否为ICMP包长度
     {
         fprintf(stderr, "Invalid icmp packet.Its length is less than 8\n");
         return -1;
     }
 
+    struct icmp* icmp = (struct icmp*)(buf+iphdr_len);
     //判断该包是ICMP回送回答包且该包是我们发出去的
-    if((icmp->icmp_type == ICMP_ECHOREPLY) && (icmp->icmp_id == (pid & 0xffff)))
+    if((icmp->icmp_type == ICMP_ECHOREPLY) && (icmp->icmp_id == (getpid() & 0xffff)))
     {
         if((icmp->icmp_seq < 0) || (icmp->icmp_seq > PACKET_SEND_MAX_NUM))
         {
@@ -122,15 +115,14 @@ int icmp_unpack(char* buf, int len)
             return -1;
         }
 
-        ping_packet[icmp->icmp_seq].flag = 0;
-        begin_time = ping_packet[icmp->icmp_seq].begin_time;
+        struct timeval recv_time;
         gettimeofday(&recv_time, NULL);
 
-        offset_time = cal_time_offset(begin_time, recv_time);
-        rtt = offset_time.tv_sec*1000 + offset_time.tv_usec/1000; //毫秒为单位
+        struct timeval *send_time = (struct timeval*)(&icmp->icmp_data[0] );
+        long rtt = cal_time_offset(*send_time, recv_time);
 
-        printf("%d byte from %s: icmp_seq=%u ttl=%d rtt=%d ms\n",
-            len, inet_ntoa(ip_hdr->ip_src), icmp->icmp_seq, ip_hdr->ip_ttl, rtt);
+        printf("%d byte from %s: icmp_seq=%u ttl=%d rtt=%ld ms\n",
+                icmp_len, inet_ntoa(ip_hdr->ip_src), icmp->icmp_seq, ip_hdr->ip_ttl, rtt);
 
     }
     else
@@ -141,45 +133,19 @@ int icmp_unpack(char* buf, int len)
     return 0;
 }
 
-void* ping_send(void *p)
-{
-    char send_buf[128];
-    memset(send_buf, 0, sizeof(send_buf));
-    gettimeofday(&start_time, NULL); //记录第一个ping包发出的时间
-    while(alive)
-    {
-        int size = 0;
-        gettimeofday(&(ping_packet[send_count].begin_time), NULL);
-        ping_packet[send_count].flag = 1; //将该标记为设置为该包已发送
 
-        icmp_pack((struct icmp*)send_buf, send_count, 64); //封装icmp包
-        size = sendto(rawsock, send_buf, 64, 0, (struct sockaddr*)&dest, sizeof(dest));
-        send_count++; //记录发出ping包的数量
-        if(size < 0)
-        {
-            fprintf(stderr, "send icmp packet fail!\n");
-            continue;
-        }
-
-        sleep(1);
-    }
-    return NULL;
-}
 
 void* ping_recv(void *p)
 {
-    struct timeval tv;
-    tv.tv_usec = 200;  //设置select函数的超时时间为200us
-    tv.tv_sec = 0;
+    struct timeval tv = {.tv_sec = 1, .tv_usec = 200};
+    int ret = 0;
     fd_set read_fd;
     char recv_buf[512];
-    memset(recv_buf, 0 ,sizeof(recv_buf));
     while(alive)
     {
-        int ret = 0;
         FD_ZERO(&read_fd);
-        FD_SET(rawsock, &read_fd);
-        ret = select(rawsock+1, &read_fd, NULL, NULL, &tv);
+        FD_SET(pf_saw_icmp_socket, &read_fd);
+        ret = select(pf_saw_icmp_socket+1, &read_fd, NULL, NULL, &tv);
         switch(ret)
         {
             case -1:
@@ -189,7 +155,7 @@ void* ping_recv(void *p)
                 break;
             default:
                 {
-                    int size = recv(rawsock, recv_buf, sizeof(recv_buf), 0);
+                    int size = recv(pf_saw_icmp_socket, recv_buf, sizeof(recv_buf), 0);
                     if(size < 0)
                     {
                         fprintf(stderr,"recv data fail!\n");
@@ -205,7 +171,6 @@ void* ping_recv(void *p)
                 }
                 break;
         }
-
     }
     return NULL;
 }
@@ -213,104 +178,120 @@ void* ping_recv(void *p)
 void icmp_sigint(int signo)
 {
     alive = 0;
-    gettimeofday(&end_time, NULL);
-    time_interval = cal_time_offset(start_time, end_time);
 }
 
 void ping_stats_show()
 {
-    long time = time_interval.tv_sec*1000+time_interval.tv_usec/1000;
+    struct timeval end_time;
+    gettimeofday(&end_time, NULL);
+    long time = cal_time_offset(start_time, end_time);
     /*注意除数不能为零，这里send_count有可能为零，所以运行时提示错误*/
     printf("%d packets transmitted, %d recieved, %d%c packet loss, time %ldms\n",
-        send_count, recv_count, (send_count-recv_count)*100/send_count, '%', time);
+            send_count, recv_count, (send_count-recv_count)*100/send_count, '%', time);
 }
 
+int getIcmpProtoNum()
+{
+    struct protoent* protocol  = getprotobyname("icmp"); //获取协议类型ICMP
+    if(protocol == NULL)
+    {
+        printf("getprotobyname fail!\n");
+        _exit(-1);
+    }
+    printf("Protocol number:%d\n", protocol->p_proto); //1
+    return protocol->p_proto;
+}
+
+void print_dest_ip(in_addr_t dest_addr,const char*ip_or_domain)
+{
+    printf("PING %s, (%d.%d.%d.%d) 56(84) bytes of data.\n",ip_or_domain,
+            (dest_addr&0x000000ff), (dest_addr&0x0000ff00)>>8,
+            (dest_addr&0x00ff0000)>>16, (dest_addr&0xff000000)>>24);
+}
+
+int set_dest_sock_addr(struct sockaddr_in *dest_socket_addr, const char*ip_or_domain)
+{
+    bzero(dest_socket_addr, sizeof(struct sockaddr_in));
+    dest_socket_addr->sin_family = AF_INET;
+
+    in_addr_t dest_addr = inet_addr(ip_or_domain);
+    if(dest_addr == INADDR_NONE)   //判断用户输入的是否为IP地址还是域名
+    {
+        //输入的是域名地址
+        struct hostent* dest_host_entry = gethostbyname(ip_or_domain);
+        if(dest_host_entry == NULL)
+        {
+            printf("Fail to gethostbyname!\n");
+            return -1;
+        }
+        printf("host entry name:%s\n", dest_host_entry->h_name);
+        memcpy((char*)&dest_socket_addr->sin_addr, dest_host_entry->h_addr, dest_host_entry->h_length);
+    }
+    else
+    {
+        memcpy((char*)&dest_socket_addr->sin_addr, &dest_addr, sizeof(dest_addr));//输入的是IP地址
+    }
+    print_dest_ip(dest_socket_addr->sin_addr.s_addr, ip_or_domain);
+    return 0;
+}
+
+void* ping_send(void *arg)
+{
+    struct sockaddr* dest_socket_addr = (struct sockaddr*)arg;
+    char send_buf[ICMP_PACKET_PACKET_LEN];
+    gettimeofday(&start_time, NULL); //记录第一个ping包发出的时间
+    while(alive)
+    {
+        icmp_pack((struct icmp*)send_buf, send_count, ICMP_PACKET_PACKET_LEN); //封装icmp包
+        int size = sendto(pf_saw_icmp_socket, send_buf, ICMP_PACKET_PACKET_LEN, 0, dest_socket_addr, sizeof(struct sockaddr_in));
+        send_count++; //记录发出ping包的数量
+        if(size < 0)
+        {
+            fprintf(stderr, "send icmp packet fail!\n");
+            continue;
+        }
+
+        sleep(1);
+    }
+    return NULL;
+}
 
 int main(int argc, char* argv[])
 {
-    int size = 128*1024;//128k
-    struct protoent* protocol = NULL;
-    char dest_addr_str[80];
-    memset(dest_addr_str, 0, 80);
-    unsigned int inaddr = 1;
-    struct hostent* host = NULL;
-
-    pthread_t send_id,recv_id;
-
     if(argc < 2)
     {
-        printf("Invalid IP ADDRESS!\n");
+        printf("usage ./%s <IP ADDRESS or domain>!\n", argv[0]);
         return -1;
     }
+    printf("sizeof icmp:%lu\n", sizeof(struct icmp));
+    printf("sizeof buff:%lu\n", ICMP_PACKET_PACKET_LEN);
+    const char*ip_or_domain = argv[1];
 
-    protocol = getprotobyname("icmp"); //获取协议类型ICMP
-    if(protocol == NULL)
-    {
-        printf("Fail to getprotobyname!\n");
-        return -1;
-    }
-
-    memcpy(dest_addr_str, argv[1], strlen(argv[1])+1);
-
-    rawsock = socket(AF_INET,SOCK_RAW,protocol->p_proto);
-    if(rawsock < 0)
+    pf_saw_icmp_socket = socket(PF_INET, SOCK_RAW, getIcmpProtoNum());
+    if(pf_saw_icmp_socket < 0)
     {
         printf("Fail to create socket!\n");
         return -1;
     }
 
-    pid = getpid();
+    int so_rcvbuf = 128*1024;//128k
+    setsockopt(pf_saw_icmp_socket, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)); //增大接收缓冲区至128K
 
-    setsockopt(rawsock, SOL_SOCKET, SO_RCVBUF, &size, sizeof(size)); //增大接收缓冲区至128K
-
-    bzero(&dest,sizeof(dest));
-
-    dest.sin_family = AF_INET;
-
-    inaddr = inet_addr(argv[1]);
-    if(inaddr == INADDR_NONE)   //判断用户输入的是否为IP地址还是域名
-    {
-        //输入的是域名地址
-        host = gethostbyname(argv[1]);
-        if(host == NULL)
-        {
-            printf("Fail to gethostbyname!\n");
-            return -1;
-        }
-
-        memcpy((char*)&dest.sin_addr, host->h_addr, host->h_length);
-    }
-    else
-    {
-        memcpy((char*)&dest.sin_addr, &inaddr, sizeof(inaddr));//输入的是IP地址
-    }
-    inaddr = dest.sin_addr.s_addr;
-    printf("PING %s, (%d.%d.%d.%d) 56(84) bytes of data.\n",dest_addr_str,
-        (inaddr&0x000000ff), (inaddr&0x0000ff00)>>8,
-        (inaddr&0x00ff0000)>>16, (inaddr&0xff000000)>>24);
-
+    struct sockaddr_in dest_socket_addr;
+    if (set_dest_sock_addr(&dest_socket_addr, ip_or_domain))
+        return -1;
+    
     alive = 1;  //控制ping的发送和接收
 
     signal(SIGINT, icmp_sigint);
 
-    if(pthread_create(&send_id, NULL, ping_send, NULL))
-    {
-        printf("Fail to create ping send thread!\n");
-        return -1;
-    }
-
-    if(pthread_create(&recv_id, NULL, ping_recv, NULL))
-    {
-        printf("Fail to create ping recv thread!\n");
-        return -1;
-    }
-
+    pthread_t send_id,recv_id;
+    pthread_create(&send_id, NULL, ping_send, &dest_socket_addr);
+    pthread_create(&recv_id, NULL, ping_recv, &dest_socket_addr);
     pthread_join(send_id, NULL);//等待send ping线程结束后进程再结束
     pthread_join(recv_id, NULL);//等待recv ping线程结束后进程再结束
 
     ping_stats_show();
-
-    close(rawsock);
+    close(pf_saw_icmp_socket);
     return 0;
-
 }

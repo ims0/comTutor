@@ -9,7 +9,7 @@
 #内置变量，默认规则会使用
 # when Invoking builtin recipe, will use those
 CC = gcc
-CFLAGS = -g -Wall 
+CFLAGS = -g -Wall -std=c11
 CPPFLAGS = 
 LDFLAGS = -lpthread
 
