@@ -3,10 +3,19 @@
   > Author: ims
   > Created Time: Tue 08 Jun 2021 11:39:30 PM CST
  *********************************************************/
+/* use iptables filter ping packet from other host
+ * sudo iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+ * sudo iptables -L INPUT --line-numbers
+ * sudo iptables -D INPUT <rule line> 
+ */
 
-//for std=c11
+/* icmp protocol 
+ * https://datatracker.ietf.org/doc/html/rfc792
+ */
+//gcc default opt is gun11, if opt set to std=c11, need add macro _GNU_SOURCE
 #define _GNU_SOURCE
 #include <stdio.h>
+#include <stdlib.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
@@ -19,7 +28,7 @@
 #include <netdb.h>
 #include <pthread.h>         
 
-#define PACKET_SEND_MAX_NUM 64
+#define PACKET_SEND_MAX_NUM 128
 #define ICMP_PACKET_HDR_LEN 8
 #define ICMP_PACKET_PACKET_LEN (ICMP_PACKET_HDR_LEN + sizeof(struct timeval))
 
@@ -30,6 +39,18 @@ int send_count;
 int recv_count;
 struct timeval start_time;
 
+void print_dest_ip(in_addr_t dest_addr,const char*ip_or_domain)
+{
+    printf("PING %s, (%d.%d.%d.%d) 56(84) bytes of data.\n",ip_or_domain,
+            (dest_addr&0x000000ff), (dest_addr&0x0000ff00)>>8,
+            (dest_addr&0x00ff0000)>>16, (dest_addr&0xff000000)>>24);
+}
+void print_recv_ip(in_addr_t dest_addr, size_t len)
+{
+    printf("recv PING (%d.%d.%d.%d) %zu bytes of data.\n",
+            (dest_addr&0x000000ff), (dest_addr&0x0000ff00)>>8,
+            (dest_addr&0x00ff0000)>>16, (dest_addr&0xff000000)>>24, len);
+}
 /*校验和算法*/
 unsigned short cal_chksum(unsigned short *addr,int len)
 {       
@@ -90,7 +111,7 @@ void icmp_pack(struct icmp* icmphdr, int seq, int length)
        }
        */
 
-    gettimeofday((struct timeval *)&icmphdr->icmp_data[0], NULL);
+    gettimeofday((struct timeval *)&(icmphdr->icmp_data[0]), NULL);
     icmphdr->icmp_cksum = cal_chksum((unsigned short*)icmphdr, length);
 }
 
@@ -101,7 +122,7 @@ int icmp_unpack(char* buf, int len)
     int icmp_len = len - iphdr_len;  //icmp包长度
     if(icmp_len < ICMP_PACKET_HDR_LEN)   //判断长度是否为ICMP包长度
     {
-        fprintf(stderr, "Invalid icmp packet.Its length is less than 8\n");
+        fprintf(stderr, "Invalid icmp packet.Its length is less than %d\n", ICMP_PACKET_HDR_LEN);
         return -1;
     }
 
@@ -112,6 +133,7 @@ int icmp_unpack(char* buf, int len)
         if((icmp->icmp_seq < 0) || (icmp->icmp_seq > PACKET_SEND_MAX_NUM))
         {
             fprintf(stderr, "icmp packet seq is out of range!\n");
+            alive = 0;
             return -1;
         }
 
@@ -127,7 +149,8 @@ int icmp_unpack(char* buf, int len)
     }
     else
     {
-        fprintf(stderr, "Invalid ICMP packet! Its id is not matched!\n");
+        fprintf(stderr, "Invalid ICMP packet! ");
+        fprintf(stderr, "icmp_type:%d,! icmp->icmp_id:%d\n",  icmp->icmp_type , icmp->icmp_id );
         return -1;
     }
     return 0;
@@ -135,12 +158,14 @@ int icmp_unpack(char* buf, int len)
 
 
 
-void* ping_recv(void *p)
+void* ping_recv(void *addr)
 {
+    struct sockaddr_in dest_sockaddr;
     struct timeval tv = {.tv_sec = 1, .tv_usec = 200};
     int ret = 0;
     fd_set read_fd;
     char recv_buf[512];
+    socklen_t len = sizeof(struct sockaddr_in);
     while(alive)
     {
         FD_ZERO(&read_fd);
@@ -155,7 +180,9 @@ void* ping_recv(void *p)
                 break;
             default:
                 {
-                    int size = recv(pf_saw_icmp_socket, recv_buf, sizeof(recv_buf), 0);
+                    //int size = recv(pf_saw_icmp_socket, recv_buf, sizeof(recv_buf), 0);
+                    int size = recvfrom(pf_saw_icmp_socket, recv_buf, sizeof(recv_buf), 0, (struct sockaddr*)&dest_sockaddr, &len);
+                    print_recv_ip(dest_sockaddr.sin_addr.s_addr, size);
                     if(size < 0)
                     {
                         fprintf(stderr,"recv data fail!\n");
@@ -177,6 +204,7 @@ void* ping_recv(void *p)
 
 void icmp_sigint(int signo)
 {
+    printf(" recv signo:SIGINT:%d\n", signo);
     alive = 0;
 }
 
@@ -202,12 +230,7 @@ int getIcmpProtoNum()
     return protocol->p_proto;
 }
 
-void print_dest_ip(in_addr_t dest_addr,const char*ip_or_domain)
-{
-    printf("PING %s, (%d.%d.%d.%d) 56(84) bytes of data.\n",ip_or_domain,
-            (dest_addr&0x000000ff), (dest_addr&0x0000ff00)>>8,
-            (dest_addr&0x00ff0000)>>16, (dest_addr&0xff000000)>>24);
-}
+
 
 int set_dest_sock_addr(struct sockaddr_in *dest_socket_addr, const char*ip_or_domain)
 {
@@ -244,11 +267,12 @@ void* ping_send(void *arg)
     {
         icmp_pack((struct icmp*)send_buf, send_count, ICMP_PACKET_PACKET_LEN); //封装icmp包
         int size = sendto(pf_saw_icmp_socket, send_buf, ICMP_PACKET_PACKET_LEN, 0, dest_socket_addr, sizeof(struct sockaddr_in));
-        send_count++; //记录发出ping包的数量
-        if(size < 0)
-        {
+        if(size < 0) {
             fprintf(stderr, "send icmp packet fail!\n");
             continue;
+        }
+        else{
+            send_count++; //记录发出ping包的数量
         }
 
         sleep(1);
@@ -256,18 +280,24 @@ void* ping_send(void *arg)
     return NULL;
 }
 
+
 int main(int argc, char* argv[])
 {
     if(argc < 2)
     {
-        printf("usage ./%s <IP ADDRESS or domain>!\n", argv[0]);
+        printf("usage %s <IP ADDRESS or domain>!\n", argv[0]);
         return -1;
     }
+    printf("main pid:%d\n", getpid());
     printf("sizeof icmp:%lu\n", sizeof(struct icmp));
+    printf("sizeof ip:%lu\n", sizeof(struct ip));
     printf("sizeof buff:%lu\n", ICMP_PACKET_PACKET_LEN);
     const char*ip_or_domain = argv[1];
+    struct sockaddr_in dest_socket_addr;
+    if (set_dest_sock_addr(&dest_socket_addr, ip_or_domain))
+        return -1;
 
-    pf_saw_icmp_socket = socket(PF_INET, SOCK_RAW, getIcmpProtoNum());
+    pf_saw_icmp_socket = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
     if(pf_saw_icmp_socket < 0)
     {
         printf("Fail to create socket!\n");
@@ -277,9 +307,7 @@ int main(int argc, char* argv[])
     int so_rcvbuf = 128*1024;//128k
     setsockopt(pf_saw_icmp_socket, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)); //增大接收缓冲区至128K
 
-    struct sockaddr_in dest_socket_addr;
-    if (set_dest_sock_addr(&dest_socket_addr, ip_or_domain))
-        return -1;
+
     
     alive = 1;  //控制ping的发送和接收
 
