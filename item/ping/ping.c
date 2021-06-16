@@ -27,6 +27,7 @@
 #include <string.h>
 #include <netdb.h>
 #include <pthread.h>         
+#include <net/if.h>
 
 #define PACKET_SEND_MAX_NUM 128
 #define ICMP_PACKET_HDR_LEN 8
@@ -285,7 +286,7 @@ int main(int argc, char* argv[])
 {
     if(argc < 2)
     {
-        printf("usage %s <IP ADDRESS or domain>!\n", argv[0]);
+        printf("usage %s <IP ADDRESS or domain> <if name>!\n", argv[0]);
         return -1;
     }
     printf("main pid:%d\n", getpid());
@@ -306,9 +307,25 @@ int main(int argc, char* argv[])
 
     int so_rcvbuf = 128*1024;//128k
     setsockopt(pf_saw_icmp_socket, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf, sizeof(so_rcvbuf)); //增大接收缓冲区至128K
-
-
-    
+    if(argc == 3)
+    {
+        struct ifreq iface;
+        const char *face = argv[2];
+        strncpy(iface.ifr_ifrn.ifrn_name, face, IFNAMSIZ);
+        setsockopt(pf_saw_icmp_socket, SOL_SOCKET, SO_BINDTODEVICE, &so_rcvbuf, sizeof(so_rcvbuf)); 
+        printf("socket bind to %s!\n", face);
+    }
+    else if(argc == 4)
+    {
+        struct sockaddr_in local_socket_addr;
+        in_addr_t addr = inet_addr(argv[3]);
+        memcpy((char*)&local_socket_addr.sin_addr, &addr, sizeof(addr));//输入的是IP地址
+        if(bind(pf_saw_icmp_socket, (struct sockaddr*)&local_socket_addr, sizeof(struct sockaddr_in)))
+        {
+            printf("bind to %s failed!\n", argv[3]);
+            return 1;
+        }
+    }
     alive = 1;  //控制ping的发送和接收
 
     signal(SIGINT, icmp_sigint);

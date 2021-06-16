@@ -6,13 +6,16 @@
 
 #include <linux/init.h>
 #include <linux/module.h>
+#include <linux/sched.h>
 
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_AUTHOR("Hcamal");
 
 int hello_init(void)
 {
+    int size = sizeof(struct task_struct);
     printk(KERN_INFO "Hello World\n");
+    printk(KERN_INFO "task_struct size:%d\n", size);
     return 0;
 }
 
