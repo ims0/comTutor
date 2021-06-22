@@ -5,18 +5,6 @@
 using namespace std;
 
 
-class globalEnvironment : public testing::Environment{
-public:
-    virtual void SetUp()
-    {
-        std::cout << "======= global Environment SetUP ========" << std::endl;
-    }
-    virtual void TearDown()
-    {
-        std::cout << "======= global Environment TearDown =========" << std::endl;
-    }
-};
-
 
 class TestCase:public testing::Test
 {
