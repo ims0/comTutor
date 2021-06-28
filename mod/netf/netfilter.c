@@ -86,25 +86,30 @@ static struct nf_hook_ops hook_ops ={
     .priority = NF_IP_PRI_FIRST
 };
 
-int hello_init(void)
+int netf_init(void)
 {
     int ret = 0;
-    printk(KERN_INFO "Hello World \n");
+    printk(KERN_INFO "[%s] entry\n", __func__);
+
     ret = nf_register_net_hook(&net_init, &hook_ops);
     if (0 != ret)
     {
         printk(KERN_WARNING "nf_register_net_hook failed,ret%d\n", ret);
         return ret;
     }
+    else
+    {
+        printk(KERN_WARNING "nf_register_net_hook succ\n");
+    }
 
     return 0;
 }
 
-void hello_exit(void)
+void netf_exit(void)
 {
-    printk(KERN_INFO "Goodbye World\n");
     nf_unregister_net_hook(&net_init, &hook_ops);
+    printk(KERN_INFO "[%s]nf_unregister_net_hook \n", __func__);
 }
 
-module_init(hello_init);
-module_exit(hello_exit);
+module_init(netf_init);
+module_exit(netf_exit);
