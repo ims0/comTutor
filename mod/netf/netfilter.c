@@ -39,7 +39,6 @@ typedef struct{
     int a;
     int b;
 }st;
-static struct net net_init;
 /* IP地址转字符串 */
 static void IP2Str(char *ipaddr, int size, uint32_t ip)  
 {  
@@ -49,13 +48,23 @@ static void IP2Str(char *ipaddr, int size, uint32_t ip)
                                         , ip & 0xff);
     return;
 } 
+#define NIPQUAD(addr) \
+        ((unsigned char *)&addr)[0], \
+        ((unsigned char *)&addr)[1], \
+        ((unsigned char *)&addr)[2], \
+        ((unsigned char *)&addr)[3]
+#define NIPQUAD_FMT "%u.%u.%u.%u"
+
 const char *src_ip="172.29.192.1";
 unsigned int my_nf_hookfn(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
     struct iphdr *pstIpHdr = NULL;
     char szIpstr[20] = {0};
-
-    printk(KERN_INFO "Recv packet \n");   /* printk打印 */
+    struct ethhdr *eth_header;
+    struct iphdr *ip_header;
+    
+    eth_header = (struct ethhdr *)(skb_mac_header(skb));
+    ip_header = (struct iphdr *)(skb_network_header(skb));
     if (unlikely(NULL == skb))
     {
         return NF_ACCEPT;
@@ -76,12 +85,16 @@ unsigned int my_nf_hookfn(void *priv, struct sk_buff *skb, const struct nf_hook_
         printk(KERN_INFO "Recv icmp packet from %s\n", src_ip);   /* printk打印 */
     }
 
+    if('0' != ip_header->saddr){
+        printk("src IP:'"NIPQUAD_FMT"', dst IP:'"NIPQUAD_FMT"' \n",
+        NIPQUAD(ip_header->saddr), NIPQUAD(ip_header->daddr));
+    }
     return NF_ACCEPT;
 }
 
 static struct nf_hook_ops hook_ops ={
     .hook = my_nf_hookfn,
-    .pf = NFPROTO_IPV4,
+    .pf = NFPROTO_INET,
     .hooknum = NF_BR_PRE_ROUTING,
     .priority = NF_IP_PRI_FIRST
 };
@@ -91,7 +104,7 @@ int netf_init(void)
     int ret = 0;
     printk(KERN_INFO "[%s] entry\n", __func__);
 
-    ret = nf_register_net_hook(&net_init, &hook_ops);
+    ret = nf_register_net_hook(&init_net, &hook_ops);
     if (0 != ret)
     {
         printk(KERN_WARNING "nf_register_net_hook failed,ret%d\n", ret);
@@ -107,7 +120,7 @@ int netf_init(void)
 
 void netf_exit(void)
 {
-    nf_unregister_net_hook(&net_init, &hook_ops);
+    nf_unregister_net_hook(&init_net, &hook_ops);
     printk(KERN_INFO "[%s]nf_unregister_net_hook \n", __func__);
 }
 
