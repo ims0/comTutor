@@ -1,11 +1,25 @@
 #include "Csmtp.h"
 #include "string.h"
-#include<arpa/inet.h>
-extern char* base64Encode(char const* origSigned, unsigned origLength);
+#include <arpa/inet.h>
 
+extern string base64Encode(char const* origSigned, unsigned origLength);
+
+static char s_recv_buff[100];  //recv函数返回的结果
+void check_errno(int ret)
+{
+    if (ret < 0)
+    {
+        cerr<<"send failed! exit." <<endl;
+        exit(-1);
+    }
+    else
+    {
+        cerr<<"send len:" << ret <<endl;
+    }
+}
 #define IP_SIZE     16
-
-int Csmtp::SendAttachment(int &sockfd) /*发送附件*/
+const int smtp_max_attach = 1000*1000;
+int Csmtp::SendAttachment(int &_sockfd) /*发送附件*/
 {
     for (std::vector<string>::iterator iter = filename.begin(); iter != filename.end(); ++iter)
     {
@@ -23,7 +37,7 @@ int Csmtp::SendAttachment(int &sockfd) /*发送附件*/
         sendstring = "--@boundary@\r\nContent-Type: application/octet-stream; name=\""+path+"\"\r\n";
         sendstring += "Content-Disposition: attachment; filename=\""+path+"\"\r\n";
         sendstring += "Content-Transfer-Encoding: base64\r\n\r\n";
-        send(sockfd, sendstring.c_str(), sendstring.length(), 0);
+        send(_sockfd, sendstring.c_str(), sendstring.length(), 0);
 
         //infile.read((char*)buffer,sizeof(数据类型));
 
@@ -37,18 +51,24 @@ int Csmtp::SendAttachment(int &sockfd) /*发送附件*/
         // read data as a block:
         ifs.read(buffer, length);
         ifs.close();
-        char *pbase;
-        pbase = base64Encode(buffer, length);
-        delete[]buffer;
-        string str(pbase);
-        delete[]pbase;
-        str += "\r\n";
-        int err = send(sockfd, str.c_str(), strlen(str.c_str()), 0);
 
-        if (err != (int)strlen(str.c_str()))
+        string encodeBuff = base64Encode(buffer, length);
+        delete[]buffer;
+        if( encodeBuff.length() > smtp_max_attach )
         {
-            cout << "附件发送出错!" << endl;
-            return 1;
+            int send_len = 0;
+            char*offset = const_cast<char*>(encodeBuff.c_str());
+            const char *end = offset + encodeBuff.length();
+
+            for( ; offset < end ; offset += smtp_max_attach )
+            {
+                int len = end- offset > smtp_max_attach ? smtp_max_attach :end- offset > smtp_max_attach;
+                send_len = send(_sockfd, offset, len, 0);
+                check_errno(send_len);
+                send_len = send(_sockfd, "\r\n", strlen("\r\n"), 0);
+                check_errno(send_len);
+                offset += smtp_max_attach;
+            }
         }
     }
     return 0;
@@ -83,7 +103,7 @@ int getIpByDomain(const char *domain, char *ip)
         printf("gethostbyname error for host:%s \n", domain);
         return -1;
     }
-    printHost(hptr);
+    //printHost(hptr);
     for(pptr = hptr->h_addr_list ; *pptr != NULL; pptr++)
     {
         if(NULL != inet_ntop(hptr->h_addrtype, *pptr, ip, IP_SIZE) )
@@ -98,29 +118,29 @@ int getIpByDomain(const char *domain, char *ip)
 
 bool Csmtp::connectServer()
 {
-
-    ///////////////////  connect to server /////////////////////////////////////
     char serverIp[16];
-    getIpByDomain(domain.c_str(), serverIp);
+    getIpByDomain(_domain.c_str(), serverIp);
+    printf("mail server ip:%s\n", serverIp);
 
     //init serverAddr
     struct sockaddr_in serverAddr;
     bzero(&serverAddr,sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
+    serverAddr.sin_port = htons(_port);
     if(inet_pton(AF_INET, serverIp, &serverAddr.sin_addr) <= 0 )
     {
         printf("inet_pton error!\n");
         return -1;
     };
-    // create sockfd and connnect
-    sockfd = socket(AF_INET,SOCK_STREAM,0);
-    if(sockfd < 0)
+    // create _sockfd and connnect
+    _sockfd = socket(AF_INET,SOCK_STREAM,0);
+    if(_sockfd < 0)
     {
         printf("Create socket error!\n");
         return -1;
     }
-    if(connect(sockfd,(struct sockaddr *)&serverAddr,sizeof(serverAddr)) < 0)
+    puts("start connect!");
+    if(connect(_sockfd,(struct sockaddr *)&serverAddr,sizeof(serverAddr)) < 0)
     {
         printf("Connect failed... \n");
         return -1;
@@ -129,86 +149,75 @@ bool Csmtp::connectServer()
         printf("Connect to %s .... \n", serverIp);
     }
     char buff[100];  //recv函数返回的结果
-    buff[recv(sockfd, buff, 500, 0)] = '\0';
+    buff[recv(_sockfd, buff, 500, 0)] = '\0';
     cout<<"connect response.[rcv]:"<<buff<<endl;
     return true;
 }
 
 
+void Csmtp::_recv(const char*str)
+{
+    s_recv_buff[recv(_sockfd, s_recv_buff, 500, 0)] = '\0';
+    cout<<str<<":"<<s_recv_buff<<endl;
+    if( strstr(s_recv_buff, "Error") )
+    {
+        cerr<<"exit!"<<endl;
+        exit(EXIT_FAILURE);
+    }
+}
+int Csmtp::_sendCmd(const char *cmd)
+{
+    return send(_sockfd, cmd, strlen(cmd), 0);
+}
 int Csmtp::SendMail()
 {
-    char *ecode;
+    _sendCmd("ehlo 126.com\r\n");
+    _recv("helo");
 
-    char buff[500];  //recv函数返回的结果
-    string message; //
+    _sendCmd("auth login\r\n");
+    _recv("auth login");
 
-    message = "ehlo 126.com\r\n";
-    send(sockfd, message.c_str(), message.length(), 0);
-
-    buff[recv(sockfd, buff, 500, 0)] = '\0';
-    cout<<"helo:"<<buff<<endl;
-
-    message = "auth login \r\n";
-    send(sockfd, message.c_str(), message.length(), 0);
-    buff[recv(sockfd, buff, 500, 0)] = '\0';
-    cout<<"auth login.[rvc]:"<<buff<<endl;
     //上传邮箱名
-    message = user;
-    ecode = base64Encode(message.c_str(), strlen(message.c_str()));
-    message = ecode;
-    message += "\r\n";
-    delete[]ecode;
-    send(sockfd, message.c_str(), message.length(), 0);
-    buff[recv(sockfd, buff, 500, 0)] = '\0';
-    cout<<"usrname.[rvc]:"<<buff<<endl;
+    string message = base64Encode(_sender.c_str(), _sender.length()) ;
+    _sendCmd(message.c_str());
+    _recv("auth login");
     //上传邮箱密码
-    message = pass;
-    ecode = base64Encode(message.c_str(), strlen(message.c_str()));
-    message = ecode;
-    delete[]ecode;
-    message += "\r\n";
-    send(sockfd, message.c_str(), message.length(), 0);
-    buff[recv(sockfd, buff, 500, 0)] = '\0';
-    cout<<"password.[rvc]:"<<buff<<endl;
-    cout<<"------------ login finish --------------"<<endl<<endl;
-    message = "mail from:<" + user + ">\r\nrcpt to:<" + target + ">\r\n";
-    send(sockfd, message.c_str(), message.length(), 0);
-    buff[recv(sockfd, buff, 500, 0)] = '\0';
-    cout<<"mail from: "<<buff<<endl;
-    buff[recv(sockfd, buff, 500, 0)] = '\0';
-    cout<<"rcpt to: "<<buff<<endl;
+    message = base64Encode(_pswd.c_str(), _pswd.length()) ;
+    _sendCmd(message.c_str());
+     _recv("password.[rvc]:");
 
-    message = "data\r\n";//data要单独发送一次
-    send(sockfd, message.c_str(), message.length(), 0);
-    buff[recv(sockfd, buff, 500, 0)] = '\0';
-    cout<<"data: "<<buff<<endl;
-    ///-----------------------------------------DATA-------------------------------------
+    message = "mail from:<" + _sender + ">\r\n";
+    _sendCmd(message.c_str());
+    _recv("mail from");
+    message = "rcpt to:<" + _recver + ">\r\n";
+    _sendCmd(message.c_str());
+    _recv("rcpt from");
+
+    message = "data\r\n"; /*data要单独发送一次*/
+    _sendCmd(message.c_str());
+    _recv("data rsp");
+    
     //要使用Csmtp 发送附件, 需要对Csmtp 头信息进行说明, 改变Content-type 及为每一段正文添加BOUNDARY 名,
-    cout << "-------------------DATA------------------------" << endl;
-    //  头
-    message = "from:" + user + "\r\nto:" + target + "\r\nsubject:" + title + "\r\n";
+    cout << "-----------DATA--------------" << endl;
+    message = "from:" + _sender + "\r\nto:" + _recver + "\r\nsubject:" + _title + "\r\n";
     message += "MIME-Version: 1.0\r\n";
     message += "Content-Type: multipart/mixed;boundary=@boundary@\r\n\r\n";
-    send(sockfd, message.c_str(), message.length(), 0);
+    _sendCmd(message.c_str());
 
     //  正文
-    message = "--@boundary@\r\nContent-Type: text/plain;charset=\"gb2312\"\r\n\r\n" + content + "\r\n\r\n";
-    send(sockfd, message.c_str(), message.length(), 0);
+    message = "--@boundary@\r\nContent-Type: text/plain;charset=\"gb2312\"\r\n\r\n" + _content + "\r\n\r\n";
+    _sendCmd(message.c_str());
 
-    //------------------------------------------------------------------------------------------------
     //  发送附件
-
-    SendAttachment(sockfd);
+    SendAttachment(_sockfd);
 
     /*发送结尾信息*/
     message = "--@boundary@--\r\n.\r\n";
-    send(sockfd, message.c_str(), message.length(), 0);
-    buff[recv(sockfd, buff, 500, 0)] = '\0';
-    cout<<"end_qwerty.[rcv]:"<<buff<<endl;
+    _sendCmd(message.c_str());
+    _recv("end_qwerty.[rcv]:");
 
     message = "QUIT\r\n";
-    send(sockfd, message.c_str(), message.length(), 0);
-    buff[recv(sockfd, buff, 500, 0)] = '\0';
-    cout << "Send mail is finish.[rcv]:" << buff << endl;
+    _sendCmd(message.c_str());
+    _recv("end_qwerty.[rcv]:");
     return 0;
 }

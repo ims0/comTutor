@@ -1,14 +1,16 @@
 #include "Csmtp.h"
+#include "signal.h"
 
 int main()
 {
 
+    signal(SIGPIPE, SIG_IGN);
     Csmtp mail(
         25,
         "smtp.126.com",
-        "xxx@126.com",// 来源邮箱
-        "xxx",
-        "xxx@126.com" //目标邮箱
+        "o@126.com",// 来源邮箱
+        "i",
+        "o@126.com" //目标邮箱
         );
 
     if (!mail.connectServer())
@@ -25,7 +27,8 @@ int main()
     mail.setTitle("test mail");
     mail.setContent("this is content.");
     //附件路径错误，不影响邮件正文的发送。
-    mail.addfile("mainfun.cpp"); //添加附件
+    //dd if=/dev/zero of=file_dd bs=1024 count=2000
+    mail.addfile("file_dd"); //添加附件
 
     mail.SendMail(); //类主函数
     return 0;
