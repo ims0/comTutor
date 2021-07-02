@@ -1,9 +1,8 @@
-#include "Csmtp.h"
+#include "smtp.h"
 #include "signal.h"
 
 int main()
 {
-
     signal(SIGPIPE, SIG_IGN);
     Csmtp mail(
         25,
@@ -30,6 +29,6 @@ int main()
     //dd if=/dev/zero of=file_dd bs=1024 count=2000
     mail.addfile("file_dd"); //添加附件
 
-    mail.SendMail(); //类主函数
+    mail.SendMail();
     return 0;
 }

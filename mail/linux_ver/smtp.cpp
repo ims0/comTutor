@@ -1,4 +1,4 @@
-#include "Csmtp.h"
+#include "smtp.h"
 #include "string.h"
 #include <arpa/inet.h>
 
