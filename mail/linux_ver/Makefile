@@ -14,7 +14,7 @@ all:${PROGS}
 	@echo all obj is new: ${PROGS}
 
 # 这里只有 mmap_file_wt, 使用了指定的规则，其它用 builtin
-mail:main.o  smtp.o base64.o
+mail:main.o  smtp.o base64.o connect.o
 	${CXX} -o $@ $^ ${LDFLAGS}
 %.o:%.cpp
 	$(CXX) -o $@ -c $< $(CPPFLAGS) $(INC_DIR)

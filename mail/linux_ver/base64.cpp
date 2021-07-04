@@ -11,7 +11,7 @@ std::string base64Encode(char const* origSigned, unsigned origLength)
     bool havePadding = origLength > numOrig24BitValues * 3;
     bool havePadding2 = origLength == numOrig24BitValues * 3 + 2;
     unsigned const numResultBytes = 4 * (numOrig24BitValues + havePadding);
-    std::string encodeBuff(numResultBytes + 2, 0);
+    std::string encodeBuff(numResultBytes + 2, 0); //2 is \r\n; length() != strlen()
     char* result = const_cast<char*>(encodeBuff.c_str());   
 
     // Map each full group of 3 input bytes into 4 output base-64 characters:  
