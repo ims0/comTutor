@@ -1,6 +1,7 @@
 /*
  * 原文链接：https://blog.csdn.net/wendowswd/article/details/90575606
  * https://www.kernel.org/doc/Documentation/RCU/whatisRCU.txt
+ * https://www.cnblogs.com/sky-heaven/p/11082428.html  -->kthread_run
 */
 #include <linux/init.h>
 #include <linux/module.h>
@@ -158,6 +159,7 @@ static int  create_thread (void) {
     return 0;
 }
 
+
 static int  create_thread_simple (void) {
       int rc = 0;
 
@@ -170,6 +172,8 @@ static int  create_thread_simple (void) {
       return 0;
 }
 
+//pid_t kernel_thread(int (*fn)(void *), void *arg, unsigned long flags);
+//has declare no define
 static int __init rcu_mod_register(void)
 {
     //int pid;
@@ -177,7 +181,7 @@ static int __init rcu_mod_register(void)
     create_thread();
     create_thread_simple();
     //pid = kernel_thread(test_func, "kernel_thread create", CLONE_FS | CLONE_FILES);
-
+    //kernel_thread(test_func,NULL,0);
     printk("=== %s finish\n", __func__);
 
     return 0;
