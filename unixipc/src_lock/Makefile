@@ -9,7 +9,7 @@ LDFLAGS = -lrt -lpthread
 INCLUDEFLAGS =
 IN_FILE=mqcom.h
 
-PROGS = rwlock_demo
+PROGS = rwlock_demo mutex foo fakemutex
 
 .PHONY:all clean
 all:${PROGS}
@@ -18,6 +18,18 @@ all:${PROGS}
 rwlock_demo:rwlock_demo.o 
 	${CC} -o $@ $^ ${LDFLAGS}
 
+mutex:mutex.o 
+	${CC} -o $@ $^ ${LDFLAGS}
+
+foo:foo.o mutex.o
+	${CC} -o $@ $^ ${LDFLAGS}
+
+fakemutex:fakemutex.o
+	${CC} -o $@ $^ ${LDFLAGS}
+fakemutex.o:mutex.c
+	$(CC) -o $@ -c $< $(CFLAGS) $(INCLUDEFLAGS) -DFAKE
+
+#common
 %.o:%.c $(IN_FILE)
 	$(CC) -o $@ -c $< $(CFLAGS) $(INCLUDEFLAGS)
 
@@ -31,4 +43,4 @@ rwlock_demo:rwlock_demo.o
 #https://segmentfault.com/a/1190000000349917
 
 clean:
-	rm -f ${PROGS} ${CLEANFILES} *.o
+	rm -f ${PROGS} ${CLEANFILES} *.o a.out 

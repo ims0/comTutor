@@ -18,6 +18,13 @@ https://juejin.cn/post/6867303928120229896#heading-15
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/spinlock.h>
+#include <linux/mutex.h>
+
+//DEFINE_MUTEX(mutex_lock)
+struct mutex mutexname ;
+    
+//mutex_init(&mutexname);
+
 static int major = 250;
 static int minor = 0;
 static dev_t devno;
