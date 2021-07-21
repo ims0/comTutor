@@ -9,7 +9,7 @@ LDFLAGS = -lrt -lpthread
 INCLUDEFLAGS =
 IN_FILE=mqcom.h
 
-PROGS = rwlock_demo mutex foo fakemutex
+PROGS = rwlock_demo mutex foo fakemutex mutex_type
 
 .PHONY:all clean
 all:${PROGS}

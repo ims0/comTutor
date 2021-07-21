@@ -31,6 +31,7 @@
 
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_AUTHOR("Liran");
+static DEFINE_SEMAPHORE(s_sem);
 
 struct fellowmisc_dev{
     struct miscdevice misc;
@@ -42,12 +43,13 @@ struct fellowmisc_dev *fellowmisc_devp;
 int fellowmisc_open(struct inode *inode, struct file *filep)
 {
     filep->private_data = fellowmisc_devp;
-    return 0;
+    return down_interruptible(&s_sem);
 }
 
 
 int fellowmisc_release(struct inode *inode, struct file *filep)
 {
+    up(&s_sem);
     return 0;
 }
 
