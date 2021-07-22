@@ -9,25 +9,31 @@
 #内置变量，默认规则会使用
 # when Invoking builtin recipe, will use those
 CC = gcc
+CXX = g++
 CFLAGS = -g2 -O0 -Wall -std=gnu11
-CPPFLAGS = 
+CPPFLAGS = -g2 -Wall -std=c++11
 LDFLAGS = -lpthread
 
 #自定义变量
 INC_DIR =
 
-PROGS = main
+PROGS = main mainp
 
 all:${PROGS}
-	LD_PRELOAD=./libredefine.so ./main
+	export LD_LIBRARY_PATH=./;LD_PRELOAD=./libredefine.so ./main
+	@echo "---"
+	export LD_LIBRARY_PATH=./;LD_PRELOAD=./libredefine.so ./mainp
 
-${PROGS}:main.c libredefine.so 
-	${CC} -o $@ $<  $(CFLAGS)
+main:main.c libredefine.so 
+	$(CC) -o $@ $<  $(CFLAGS)  -lredefine -L./
+
+mainp:main.cpp libredefine.so 
+	$(CXX) -o $@ $<  $(CPPFLAGS)  -lredefine -L./
 
 libredefine.so:redefine.o
 	$(CC) -o $@  -shared $<  -ldl
 foo.o:foo.c
-	$(CC) -o $@ -c -fpic $< $(CFLAGS) 
+	$(CC) -o $@ -c -fPIC $< $(CFLAGS) 
 
 %.o:%.c
 	$(CC) -o $@ -c $< $(CFLAGS) $(INC_DIR)

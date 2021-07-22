@@ -11,7 +11,6 @@
 /* Pointer to the real functions.  These are determined used `dlsym'
    when really needed.  */
 static void *(*mallocp)(size_t);
-static void *(*def_mallocp)(size_t);
 static void (*freep) (void *);
 static void (*def_freep) (void *);
 static void *(*reallocp) (void *, size_t);
@@ -28,15 +27,12 @@ void* malloc(size_t size)
 }
 void free(void *ptr)
 {
-    mallocp = (void *(*)(size_t))dlsym (RTLD_NEXT, "malloc");
-    def_mallocp = (void *(*)(size_t))dlsym (RTLD_DEFAULT, "malloc");
+    printf("%s:malloc_cnt:%d\n", __func__,malloc_cnt);
     freep = (void (*)(void *))dlsym (RTLD_NEXT, "free");
     def_freep = (void (*)(void *))dlsym (RTLD_DEFAULT, "free");
-    printf("%s:malloc_cnt:%d\n", __func__,malloc_cnt);
-    printf("%s:def_mallocp:%p\n", __func__,def_mallocp);
-    printf("%s:mallocp:%p\n", __func__,mallocp);
     printf("%s:def_freep:%p\n", __func__,def_freep);
     printf("%s:freep:%p\n", __func__,freep);
+    malloc_cnt--;
     return (*freep)(ptr);
 }
 
@@ -51,4 +47,9 @@ void *realloc(void *ptr, size_t size)
     reallocp = (void *(*)(void *, size_t))dlsym (RTLD_NEXT, "realloc");
     printf("%s:reallocp:%p\n", __func__,reallocp);
     return (*reallocp)(ptr, size);
+}
+
+int getcnt()
+{
+    return malloc_cnt;
 }
