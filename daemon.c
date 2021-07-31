@@ -3,7 +3,10 @@
     > Author: ims
     > Created Time: Sun 25 Jul 2021 06:10:55 PM CST
  *********************************************************/
+
 /* 调试进程相关id ：ps -o pid,ppid,pgid,sid,tty,comm
+ * ps axj options :a: 显示所有; x：显示没有控制终端的进程;
+ * j：显示与作业有关的信息（显示的列）：会话期ID（SID），进程组ID（PGID），控制终端（TT），终端进程组ID（TRGID）
  * shell里的命令有独立的组id，有相同的 session id
  * fork 的子进程 继承父进程的组id以及 session id
  */
@@ -15,8 +18,14 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <sys/file.h>
 
 /* 设置一把写锁 */
+
+int lock(int fd)
+{
+    return flock(fd, LOCK_EX|LOCK_NB);
+}
 int writeLocknw(int fd, short start, short whence, short len) {
   struct flock lock;
   lock.l_type = F_WRLCK;
@@ -53,12 +62,13 @@ void SubProcessContinue() {
  */
 void checkUnique() {
   int fd;
-  const char *lock = "/tmp/daemon-lock";
-  if ((fd = open(lock, O_CREAT | O_WRONLY, 0600)) < 0) {
+  const char *lockfile = "/tmp/daemon-lock";
+  if ((fd = open(lockfile, O_CREAT | O_WRONLY, 0600)) < 0) {
     kill(getpid(), SIGSEGV);
   }
 
-  if (writeLocknw(fd, 0, SEEK_SET, 0) < 0) {
+  //if (writeLocknw(fd, 0, SEEK_SET, 0) < 0) {
+  if (lock(fd) < 0) {
     kill(getpid(), SIGSEGV);
   }
   /* 对于 fcntl() 锁，close就是解锁，等进程结束，系统关闭fd即可。
@@ -72,7 +82,7 @@ int main() {
   // 2,脱离控制终端，成为登录会话组长和进程组长
   setsid();
 
-  // 3,禁止进程重新打开控制终端
+  // 3,禁止进程重新打开控制终端,open("/dev/console",O_RDWR)
   SubProcessContinue(); //第二子进程不再是会话组长
   printf("daemon pid: %d\n", getpid());
   // 4. 重设文件创建掩模
