@@ -7,6 +7,7 @@
 #define _MULTI_THREADED
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <pthread.h>
 
 void checkResults(const char*str, int rc)
@@ -17,6 +18,7 @@ void checkResults(const char*str, int rc)
 pthread_rwlock_t rwlock;
 
 void *rdlockThread(void *arg) {
+  (void)arg;
   int rc;
 
   printf("Entered thread, getting read lock\n");
@@ -34,6 +36,7 @@ void *rdlockThread(void *arg) {
 }
 
 void *wrlockThread(void *arg) {
+  (void)arg;
   int rc;
 
   printf("--Entered thread, getting WRITE lock\n");
@@ -48,6 +51,7 @@ void *wrlockThread(void *arg) {
 }
 
 int main(int argc, char **argv) {
+  (void)argc;
   int rc = 0;
   pthread_t thread, thread1;
 

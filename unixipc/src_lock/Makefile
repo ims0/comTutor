@@ -4,7 +4,7 @@
 #$?  表示比目标还要新的依赖文件列表
 
 CC = gcc
-CFLAGS = -g -O2 -D_REENTRANT -Wall
+CFLAGS = -g -O0 -D_REENTRANT -Wall
 LDFLAGS = -lrt -lpthread 
 INCLUDEFLAGS =
 IN_FILE=mqcom.h
@@ -29,6 +29,8 @@ fakemutex:fakemutex.o
 fakemutex.o:mutex.c
 	$(CC) -o $@ -c $< $(CFLAGS) $(INCLUDEFLAGS) -DFAKE
 
+mutex_type:mutex_type.o
+	${CC} -o $@ $^ ${LDFLAGS}
 #common
 %.o:%.c $(IN_FILE)
 	$(CC) -o $@ -c $< $(CFLAGS) $(INCLUDEFLAGS)
