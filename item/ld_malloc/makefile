@@ -17,23 +17,21 @@ LDFLAGS = -lpthread
 #自定义变量
 INC_DIR =
 
-PROGS = main mainp
+PROGS = main main_cpp
 
 all:${PROGS}
 	export LD_LIBRARY_PATH=./;LD_PRELOAD=./libredefine.so ./main
 	@echo "---"
-	export LD_LIBRARY_PATH=./;LD_PRELOAD=./libredefine.so ./mainp
+	export LD_LIBRARY_PATH=./;LD_PRELOAD=./libredefine.so ./main_cpp
 
 main:main.c libredefine.so 
 	$(CC) -o $@ $<  $(CFLAGS)  -lredefine -L./
 
-mainp:main.cpp libredefine.so 
+main_cpp:main.cpp libredefine.so 
 	$(CXX) -o $@ $<  $(CPPFLAGS)  -lredefine -L./
 
-libredefine.so:redefine.o
+libredefine.so:redefine_sym.o
 	$(CC) -o $@  -shared $<  -ldl
-foo.o:foo.c
-	$(CC) -o $@ -c -fPIC $< $(CFLAGS) 
 
 %.o:%.c
 	$(CC) -o $@ -c $< $(CFLAGS) $(INC_DIR)
