@@ -1,6 +1,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/sched.h>
+#include <asm-generic/barrier.h>
 
 /*  seqlock
  * doc: https://www.kernel.org/doc/html/latest/locking/seqlock.html
@@ -24,6 +25,7 @@ struct {
 
 void lock_init(void) {
   /* seqlock  dynamic init */
+    smp_mb();
   seqlock_init(&foo_seqlock);
 }
 void read_seq_lock(void) {
