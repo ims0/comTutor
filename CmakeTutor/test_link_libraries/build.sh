@@ -22,8 +22,7 @@ echo "env var CC:$CC"
 echo "env var CXX:$CXX"
 
 cd build
-cmake ../ -DPROJECT_NAME=test_depend_lib
-make
 
-echo 'running'
-./test_depend_lib
+cmake ../ -DPROJECT_NAME=test_depend_lib
+
+make && ./test_depend_lib
