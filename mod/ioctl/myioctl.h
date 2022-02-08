@@ -21,5 +21,6 @@ struct miscdata {
 #define FELLOW_MISC_IOC_SET _IOW(FELLOW_MISC_IOC_MAGIC, 3, struct miscdata)
 #define FELLOW_MISC_IOC_MAXNR 3
 
+const char *const misc_dev_name = "misc_dev_one";
 //原文链接：https://blog.csdn.net/wjlinux21/article/details/111691691
 #endif

@@ -1,0 +1,2 @@
+对于linux的驱动程序来说，主要分为三种：miscdevice、platform_device、platform_driver
+在Linux驱动中把无法归类的五花八门的设备定义为混杂设备(用miscdevice结构体表述)。miscdevice共享一个主设备号MISC_MAJOR(即10)，但次设备号不同。 所有的miscdevice设备形成了一个链表，对设备访问时内核根据次设备号查找对应的miscdevice设备，然后调用其file_operations结构中注册的文件操作接口进行操作。

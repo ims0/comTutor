@@ -93,7 +93,7 @@ static const struct file_operations fellowmisc_fops ={
 };
 static struct miscdevice fellow_misc = {
     .minor = MISC_DYNAMIC_MINOR,
-    .name = "fellowplat",
+    .name = misc_dev_name,
     .fops = &fellowmisc_fops,
 };
 
@@ -119,7 +119,6 @@ static int fellow_plat_drv_probe(struct platform_device *dev)
 static int fellow_plat_drv_remove(struct platform_device *dev)
 {
     //int error;
-
     if(fellowmisc_devp)
     {
         kfree(fellowmisc_devp);
@@ -140,28 +139,21 @@ static struct platform_driver fellow_platform_driver = {
 static int fellowplat_init(void)
 {
     int error;
-    printk("fellowplat_init\n");
     printk("fellow register driver\n");
     error = platform_driver_register(&fellow_platform_driver);//注册platform driver
-
     if (error)
         return error;
 
     fellow_platform_device = platform_device_alloc("fellow", -1);//名字与platform driver相同。
-
     if (!fellow_platform_device) {
         error = -ENOMEM;
         goto err_driver_unregister;
     }
-
     printk("fellow register device\n");
 
     error = platform_device_add(fellow_platform_device);//添加platform device
-
     if (error)
         goto err_free_device;
-
-
     return 0;
 
 err_free_device:
