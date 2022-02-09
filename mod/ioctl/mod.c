@@ -65,22 +65,18 @@ long fellowmisc_ioctl(struct file *filep,unsigned int cmd,unsigned long arg)
     switch(cmd)
     {
         case FELLOW_MISC_IOC_PRINT:
-            printk("FELLOW_MISC_IOC_PRINT\n");
-            printk("val:%d, size: %d, str: %s\n", devp->data.val, devp->data.size, devp->data.str);
+            printk("[IOC_PRINT]val:%d, size: %d, str: %s\n", devp->data.val, devp->data.size, devp->data.str);
             break;
         case FELLOW_MISC_IOC_SET:
-            printk("FELLOW_MISC_IOC_SET\n");
             ret = copy_from_user((unsigned char*)&(devp->data), (unsigned char *)arg, sizeof(struct miscdata));
-            printk("set val:%d, size: %d, str: %s\n", devp->data.val, devp->data.size, devp->data.str);
+            //printk("set val:%d, size: %d, str: %s\n", devp->data.val, devp->data.size, devp->data.str);
             break;
-
         case FELLOW_MISC_IOC_GET:
             printk("FELLOW_MISC_IOC_GET\n");
             ret = copy_to_user((unsigned char*)arg,(unsigned char*)&(devp->data), sizeof(struct miscdata));
             break;
         default:
-            return -EINVAL;
-
+            return -EINVAL;/* Invalid argument */
     }
     return ret;
 }
